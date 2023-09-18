@@ -19,5 +19,5 @@
       "element-plus/global"
     ]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/index.js"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/index.js"]
 }

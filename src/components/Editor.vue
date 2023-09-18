@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { ElInput } from 'element-plus'
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { VideoPlay, EditPen, Search } from '@element-plus/icons-vue'
+import { EditorState, Extension } from '@codemirror/state'
+import { highlightSpecialChars, drawSelection } from '@codemirror/view'
+import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from '@codemirror/language'
+import { autocompletion, closeBrackets } from '@codemirror/autocomplete'
+import { highlightSelectionMatches } from '@codemirror/search'
+import CodeMirror from 'vue-codemirror6'
+import type { LintSource } from '@codemirror/lint'
+import eslint from 'eslint-linter-browserify'
+import { esLint, javascript } from '@codemirror/lang-javascript'
 
 interface Props {
   targetEle: string
@@ -10,6 +19,39 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   targetEle: '测试字段'
 })
+
+const cm: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
+
+const formula: Ref<string> = ref(`function helloWorld() {
+  console.log('Hello, world!');
+}`)
+
+const focused: Ref<boolean> = ref(false)
+
+/**
+ * JavaScript language Linter Setting.
+ * Using eslint-linter-browserify
+ *
+ * @see {@link https://github.com/UziTech/eslint-linter-browserify#eslint-linter-browserify}
+ */
+const linter: LintSource = esLint(
+  // eslint-disable-next-line
+  new eslint.Linter(),
+  {
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module'
+    },
+    env: {
+      browser: true,
+      node: true
+    }
+  }
+)
+
+const onFocus = (f: boolean): void => {
+  focused.value = f
+}
 
 interface Tree {
   id: string
@@ -43,7 +85,16 @@ const vars: Tree[] = [
   }
 ]
 
-const formula = ref<string>()
+const cmExtensions: Extension[] = [
+  highlightSpecialChars(),
+  drawSelection(),
+  indentOnInput(),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  bracketMatching(),
+  closeBrackets(),
+  autocompletion(),
+  highlightSelectionMatches()
+]
 </script>
 
 <template>
@@ -53,7 +104,7 @@ const formula = ref<string>()
       <el-col :span="12" class="iw-editor-toolbar__opt"><el-button :icon="VideoPlay" link>调试</el-button><el-button :icon="EditPen" link>代码模式</el-button></el-col>
     </el-row>
     <el-row class="iw-editor-formula">
-      <el-input v-model="formula" type="textarea" :autosize="{ minRows: 10 }" placeholder="在此输入公式" />
+      <code-mirror class="iw-editor-formula--size" ref="cm" v-model="formula" :lang="javascript()" wrap :linter="linter" @focus="onFocus" placeholder="在此输入公式" :extensions="cmExtensions" />
     </el-row>
     <el-row class="iw-editor-tooltip"> 字符错误 </el-row>
     <el-row class="iw-editor-material">
@@ -123,6 +174,10 @@ const formula = ref<string>()
 }
 
 @include b('editor-formula') {
+  @include m('size') {
+    width: 100%;
+    min-height: 200px;
+  }
 }
 
 @include b('editor-tooltip') {
@@ -176,6 +231,10 @@ const formula = ref<string>()
   textarea:focus {
     border: none;
     box-shadow: none;
+  }
+
+  .cm-focused {
+    outline: none;
   }
 }
 
