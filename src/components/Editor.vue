@@ -3,13 +3,14 @@ import { ElInput } from 'element-plus'
 import { ref, type Ref } from 'vue'
 import { VideoPlay, EditPen, Search } from '@element-plus/icons-vue'
 import { EditorState, Extension } from '@codemirror/state'
-import { highlightSpecialChars, drawSelection } from '@codemirror/view'
+import { highlightSpecialChars, drawSelection, MatchDecorator, Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType, keymap } from '@codemirror/view'
 import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from '@codemirror/language'
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete'
 import { highlightSelectionMatches } from '@codemirror/search'
+import { history, defaultKeymap, historyKeymap } from '@codemirror/commands'
 import CodeMirror from 'vue-codemirror6'
-import type { LintSource } from '@codemirror/lint'
-import eslint from 'eslint-linter-browserify'
+import { linter } from '@codemirror/lint'
+import * as eslint from 'eslint-linter-browserify'
 import { esLint, javascript } from '@codemirror/lang-javascript'
 
 interface Props {
@@ -20,38 +21,147 @@ const props = withDefaults(defineProps<Props>(), {
   targetEle: '测试字段'
 })
 
-const cm: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
+const formula: Ref<string> = ref(`
+  const $ = {
+     fun:{
+        sum: (a,b)=> a+b
+     },
+  }
 
-const formula: Ref<string> = ref(`function helloWorld() {
-  console.log('Hello, world!');
-}`)
+  function sum(a,b){
+    return a+b
+  }
 
-const focused: Ref<boolean> = ref(false)
+  function add(a,b){
+    return a+b
+  }
 
-/**
- * JavaScript language Linter Setting.
- * Using eslint-linter-browserify
- *
- * @see {@link https://github.com/UziTech/eslint-linter-browserify#eslint-linter-browserify}
- */
-const linter: LintSource = esLint(
-  // eslint-disable-next-line
-  new eslint.Linter(),
-  {
-    parserOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module'
-    },
-    env: {
-      browser: true,
-      node: true
+  sum(a,b,c)
+
+add(a,b)
+
+
+  $.fun.sum(1+$.field.age)>20? $.param.age: $.field.age`)
+
+// -----------------------------
+
+const codeEditor: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
+
+// placeholderMatcher
+const placeholderMatcher = new MatchDecorator({
+  regexp: /\$.(\w+\.\w+)/g,
+  decoration: (match) =>
+    Decoration.replace({
+      widget: new PlaceholderWidget(match[1])
+    })
+})
+
+//placeholderPlugin
+const placeholders = ViewPlugin.fromClass(
+  class {
+    placeholders: DecorationSet
+    constructor(view: EditorView) {
+      this.placeholders = placeholderMatcher.createDeco(view)
     }
+    update(update: ViewUpdate) {
+      this.placeholders = placeholderMatcher.updateDeco(update, this.placeholders)
+    }
+  },
+  {
+    decorations: (instance) => instance.placeholders,
+    provide: (plugin) =>
+      EditorView.atomicRanges.of((view) => {
+        return view.plugin(plugin)?.placeholders || Decoration.none
+      })
   }
 )
 
-const onFocus = (f: boolean): void => {
-  focused.value = f
+// placeholderWidget
+class PlaceholderWidget extends WidgetType {
+  constructor(readonly name: string) {
+    super()
+  }
+  eq(other: PlaceholderWidget) {
+    return this.name == other.name
+  }
+  toDOM() {
+    // TODO
+    console.log('----------------------' + this.name)
+    let elt = document.createElement('span')
+    elt.style.cssText = `
+      border: 1px solid blue;
+      border-radius: 4px;
+      padding: 0 3px;
+      background: lightblue;`
+    elt.textContent = this.name
+    return elt
+  }
+  ignoreEvent() {
+    return false
+  }
 }
+
+import { CompletionContext } from '@codemirror/autocomplete'
+
+function completions(context: CompletionContext) {
+  let level1 = context.matchBefore(/\$\.*/)
+  let level2 = context.matchBefore(/\$\.\w*\./)
+  if ((level1 == null || (level1.from == level1.to && !context.explicit)) && (level2 == null || (level2.from == level2.to && !context.explicit))) {
+    return null
+  }
+  console.log('==' + JSON.stringify(level1) + JSON.stringify(level2))
+  if (level1 != null) {
+    return {
+      from: level1?.from,
+      options: [
+        { label: '$.fun', type: 'variable', detail: '函数集合' },
+        { label: '$.var', type: 'variable', detail: '变量集合' }
+      ]
+    }
+  } else if (level2?.text == '$.fun.') {
+    console.log('xxxx' + level2?.text)
+    return {
+      from: level2?.from,
+      options: [{ label: '$.fun.sum', type: 'variable',detail: '累加器', apply: '$.fun.sum()' }]
+    }
+  }
+}
+
+//!createOverride
+
+const cmExtensions: Extension[] = [
+  placeholders,
+  highlightSpecialChars(),
+  history(),
+  drawSelection(),
+  indentOnInput(),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  bracketMatching(),
+  closeBrackets(),
+  autocompletion({
+    override: [completions]
+  }),
+  highlightSelectionMatches(),
+  javascript(),
+  //lintGutter(),
+  // eslint-disable-next-line
+  linter(
+    esLint(new eslint.Linter(), {
+      // eslint configuration
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module'
+      },
+      env: {
+        browser: true,
+        node: true
+      }
+    })
+  ),
+  keymap.of([...defaultKeymap, ...historyKeymap])
+]
+
+// -----------------------------
 
 interface Tree {
   id: string
@@ -84,17 +194,6 @@ const vars: Tree[] = [
     ]
   }
 ]
-
-const cmExtensions: Extension[] = [
-  highlightSpecialChars(),
-  drawSelection(),
-  indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-  bracketMatching(),
-  closeBrackets(),
-  autocompletion(),
-  highlightSelectionMatches()
-]
 </script>
 
 <template>
@@ -104,7 +203,7 @@ const cmExtensions: Extension[] = [
       <el-col :span="12" class="iw-editor-toolbar__opt"><el-button :icon="VideoPlay" link>调试</el-button><el-button :icon="EditPen" link>代码模式</el-button></el-col>
     </el-row>
     <el-row class="iw-editor-formula">
-      <code-mirror class="iw-editor-formula--size" ref="cm" v-model="formula" :lang="javascript()" wrap :linter="linter" @focus="onFocus" placeholder="在此输入公式" :extensions="cmExtensions" />
+      <code-mirror class="iw-editor-formula--size" ref="codeEditor" v-model="formula" wrap placeholder="在此输入公式" :extensions="cmExtensions" />
     </el-row>
     <el-row class="iw-editor-tooltip"> 字符错误 </el-row>
     <el-row class="iw-editor-material">
@@ -121,9 +220,10 @@ const cmExtensions: Extension[] = [
               </template>
             </el-tree>
           </el-tab-pane>
-          <el-tab-pane label="模型">Config</el-tab-pane>
-          <el-tab-pane label="字典">Role</el-tab-pane>
-          <el-tab-pane label="主题">Task</el-tab-pane>
+          <el-tab-pane label="模型"></el-tab-pane>
+          <el-tab-pane label="字典"></el-tab-pane>
+          <el-tab-pane label="参数"></el-tab-pane>
+          <el-tab-pane label="主题"></el-tab-pane>
         </el-tabs>
       </el-col>
       <el-col class="iw-editor-material__func-wrapper" :span="18">
@@ -141,7 +241,7 @@ const cmExtensions: Extension[] = [
                   </template>
                 </el-tree>
               </el-tab-pane>
-              <el-tab-pane label="API">Config</el-tab-pane>
+              <el-tab-pane label="API"></el-tab-pane>
             </el-tabs>
           </el-col>
           <el-col class="iw-editor-material__func-note" :span="14">
