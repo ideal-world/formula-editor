@@ -5,7 +5,7 @@ import { VideoPlay, EditPen, Search } from '@element-plus/icons-vue'
 import { EditorState, Extension } from '@codemirror/state'
 import { highlightSpecialChars, drawSelection, MatchDecorator, Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType, keymap } from '@codemirror/view'
 import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from '@codemirror/language'
-import { autocompletion, closeBrackets } from '@codemirror/autocomplete'
+import { autocompletion, closeBrackets, CompletionResult } from '@codemirror/autocomplete'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { history, defaultKeymap, historyKeymap } from '@codemirror/commands'
 import CodeMirror from 'vue-codemirror6'
@@ -103,7 +103,7 @@ class PlaceholderWidget extends WidgetType {
 
 import { CompletionContext } from '@codemirror/autocomplete'
 
-function completions(context: CompletionContext) {
+function completions(context: CompletionContext):CompletionResult | null {
   let level1 = context.matchBefore(/\$\.*/)
   let level2 = context.matchBefore(/\$\.\w*\./)
   if ((level1 == null || (level1.from == level1.to && !context.explicit)) && (level2 == null || (level2.from == level2.to && !context.explicit))) {
@@ -124,6 +124,8 @@ function completions(context: CompletionContext) {
       from: level2?.from,
       options: [{ label: '$.fun.sum', type: 'variable',detail: '累加器', apply: '$.fun.sum()' }]
     }
+  }else{
+    return null
   }
 }
 
