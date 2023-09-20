@@ -17,7 +17,7 @@ module.exports = defineConfig({
           prefix: 'Icon'
         })
       ]
-    }), 
+    }),
     Components({
       resolvers: [ElementPlusResolver()]
     }),
@@ -33,7 +33,7 @@ module.exports = defineConfig({
       fileName: (format) => `formula-editor.${format}.js`
     },
     rollupOptions: {
-      external: ['vue', /element-plus\/.+/],
+      external: ['vue', 'codemirror', 'element-plus', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/, /@element-plus\/.+/],
       output: {
         exports: 'named',
         globals: {
