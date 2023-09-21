@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ElInput } from 'element-plus'
-import { ref, type Ref } from 'vue'
-import { VideoPlay, EditPen, Search } from '@element-plus/icons-vue'
+import { reactive, ref, type Ref } from 'vue'
+import { VideoPlay, EditPen, Search, View } from '@element-plus/icons-vue'
 import { EditorState, Extension } from '@codemirror/state'
 import { highlightSpecialChars, drawSelection, MatchDecorator, Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType, keymap } from '@codemirror/view'
 import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from '@codemirror/language'
@@ -55,6 +55,7 @@ interface VarInfo extends VarGuard {
   label?: string
   note?: string
   cates?: string[]
+  defaultValue?: any
 }
 
 interface FunInfo {
@@ -82,7 +83,7 @@ const props = withDefaults(defineProps<Props>(), {
       name: 'field',
       label: '字段',
       isVar: true,
-      color: '#d44',
+      color: '#f8e3c5',
       items: [
         {
           name: 'applicant',
@@ -117,7 +118,7 @@ const props = withDefaults(defineProps<Props>(), {
       name: 'model',
       label: '模型',
       isVar: true,
-      color: '#700',
+      color: '#e1f3d8',
       items: [
         {
           name: 'accountName',
@@ -152,7 +153,7 @@ const props = withDefaults(defineProps<Props>(), {
       name: 'fun',
       label: '函数',
       isVar: false,
-      color: '#e2aa53',
+      color: '#d9ecff',
       items: [
         {
           name: 'sum',
@@ -162,7 +163,7 @@ const props = withDefaults(defineProps<Props>(), {
 示例：SUM(语文成绩,数学成绩, 英语成绩)返回三门课程的总分。`,
           input: [
             {
-              kind: VarKind.STRING
+              kind: VarKind.NUMBER
             }
           ],
           isVarLen: true,
@@ -194,7 +195,7 @@ const props = withDefaults(defineProps<Props>(), {
           ],
           isVarLen: true,
           output: {
-            kind: VarKind.NUMBER
+            kind: VarKind.STRING
           },
           cates: ['常用', '文本处理']
         },
@@ -217,51 +218,34 @@ const props = withDefaults(defineProps<Props>(), {
       ]
     }
   ],
-  formula: `$.fun.connect($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',null,$.param.someVar)`,
+  formula: `$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',null,$.param.someVar)`,
   entrance: '$'
 })
 
+// $.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',null,$.param.someVar)
+
 const formula: Ref<string> = ref(props.formula)
-
-// -----------------------------------------
-
-// const $ = {
-// fun:{
-//       sum: (a,b)=> a+b
-//    },
-// }
-
-// function sum(a,b){
-//   return a+b
-// }
-
-// function add(a,b){
-//   return a+b
-// }
-//  $.fun.sum(1+$.field.age)>20? $.param.age: $.field.age
 
 // -----------------------------
 
 const codeEditor: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
 
-// placeholderMatcher
-const placeholderMatcher = new MatchDecorator({
+const keyWordMatcher = new MatchDecorator({
   regexp: new RegExp('\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
   decoration: (match) =>
     Decoration.replace({
-      widget: new PlaceholderWidget(match[1])
+      widget: new KeywordWidget(match[1])
     })
 })
 
-//placeholderPlugin
-const placeholders = ViewPlugin.fromClass(
+const keyWordPlugin = ViewPlugin.fromClass(
   class {
     placeholders: DecorationSet
     constructor(view: EditorView) {
-      this.placeholders = placeholderMatcher.createDeco(view)
+      this.placeholders = keyWordMatcher.createDeco(view)
     }
     update(update: ViewUpdate) {
-      this.placeholders = placeholderMatcher.updateDeco(update, this.placeholders)
+      this.placeholders = keyWordMatcher.updateDeco(update, this.placeholders)
     }
   },
   {
@@ -273,26 +257,27 @@ const placeholders = ViewPlugin.fromClass(
   }
 )
 
-// placeholderWidget
-class PlaceholderWidget extends WidgetType {
+class KeywordWidget extends WidgetType {
   constructor(readonly name: string) {
     super()
   }
-  eq(other: PlaceholderWidget) {
+  eq(other: KeywordWidget) {
     return this.name == other.name
   }
   toDOM() {
     let namespace = this.name.split('.')[0]
     let name = this.name.split('.')[1]
-    let color = props.materials.find((ns) => ns.name === namespace)?.color || 'lightblue'
+    let color = props.materials.find((ns) => ns.name === namespace)?.color || '#e9e9eb'
     let elt = document.createElement('span')
     elt.style.cssText =
       `
       border-radius: 4px;
-      padding: 0 3px;
+      margin: 0 3px;
+      padding: 1px 3px;
       background: ` +
       color +
       `;`
+    elt.className = 'iw-editor-formula__key-word'
     elt.textContent = name
     return elt
   }
@@ -306,14 +291,19 @@ import { CompletionContext } from '@codemirror/autocomplete'
 function completions(context: CompletionContext): CompletionResult | null {
   let nsMatch = context.matchBefore(new RegExp('\\' + props.entrance + '\\.*'))
   let nameMatch = context.matchBefore(new RegExp('\\' + props.entrance + '\\.\\w*\\.'))
-  if ((nsMatch == null || (nsMatch.from == nsMatch.to && !context.explicit)) && (nameMatch == null || (nameMatch.from == nameMatch.to && !context.explicit))) {
+  let wordMatch = context.matchBefore(/\w*/)
+  if (
+    (nsMatch == null || (nsMatch.from == nsMatch.to && !context.explicit)) &&
+    (nameMatch == null || (nameMatch.from == nameMatch.to && !context.explicit)) &&
+    (wordMatch == null || (wordMatch.from == wordMatch.to && !context.explicit))
+  ) {
     return null
   }
   if (nsMatch != null) {
     return {
       from: nsMatch.from,
       options: props.materials.map((ns) => {
-        return { label: props.entrance + '.' + ns.name, type: 'variable', detail: ns.label }
+        return { label: props.entrance + '.' + ns.name, type: 'namespace', detail: ns.label }
       })
     }
   } else if (nameMatch != null) {
@@ -328,25 +318,64 @@ function completions(context: CompletionContext): CompletionResult | null {
         ns.items.map((item) => {
           let fullName = props.entrance + '.' + namespace + '.' + item.name
           if (ns?.isVar) {
-            return { label: fullName, type: 'variable', detail: item.label }
+            return { label: fullName + ' ', type: 'variable', detail: item.label }
           } else {
-            let offset = (item as FunInfo).name.length + 1
+            let offset = fullName.length + 1
             return {
               label: fullName,
-              type: 'variable',
+              type: 'function',
               detail: item.label,
               apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                 view.dispatch({
                   changes: { from, to, insert: fullName + '()' },
                   selection: {
-                    anchor: to + offset,
-                    head: to + offset
+                    anchor: from + offset,
+                    head: from + offset
                   }
                 })
               }
             }
           }
         }) ?? []
+    }
+  } else if (wordMatch != null) {
+    let text = wordMatch.text
+    let options: Completion[] = props.materials
+      .map((ns) => {
+        if (ns.isVar) {
+          return (ns.items as VarInfo[])
+            .filter((item) => item.name?.startsWith(text))
+            .map((item) => {
+              let fullName = props.entrance + '.' + ns.name + '.' + item.name
+              return { label: item.name, type: 'variable', detail: item.label + '(' + ns.label + ')', apply: fullName + ' ' } as Completion
+            })
+        } else {
+          return (ns.items as FunInfo[])
+            .filter((item) => item.name.startsWith(text))
+            .map((item) => {
+              let fullName = props.entrance + '.' + ns.name + '.' + item.name
+              let offset = fullName.length + 1
+              return {
+                label: item.name,
+                type: 'function',
+                detail: item.label + '(' + ns.label + ')',
+                apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+                  view.dispatch({
+                    changes: { from, to, insert: fullName + '()' },
+                    selection: {
+                      anchor: from + offset,
+                      head: from + offset
+                    }
+                  })
+                }
+              } as Completion
+            })
+        }
+      })
+      .flat()
+    return {
+      from: wordMatch.from,
+      options: options
     }
   } else {
     return null
@@ -356,10 +385,15 @@ function completions(context: CompletionContext): CompletionResult | null {
 import { syntaxTree } from '@codemirror/language'
 import { Diagnostic } from '@codemirror/lint'
 
-function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expectedOutputKind: VarKind, diagnostics: Diagnostic[]): boolean {
+enum VerifyResult {
+  IGNORE,
+  HIT
+}
+
+function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expectedOutputKind: VarKind, diagnostics: Diagnostic[]): VerifyResult {
   // E.g.
   // code:
-  // $.fun.connect($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
+  // $.fun.concat($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
   //
   // syntaxTree:
   //  CallExpression(
@@ -386,148 +420,179 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
   //    )
   //  )
   let kind = null
+  let memberName
   if (node.name === 'CallExpression' && node.firstChild?.name === 'MemberExpression' && node.firstChild?.firstChild?.name === 'MemberExpression' && node.firstChild?.nextSibling?.name === 'ArgList') {
     kind = 'expr'
+    memberName = view.state.sliceDoc(node.firstChild?.from, node.firstChild?.to)
   } else if (node.name === 'MemberExpression' && node.firstChild?.name === 'MemberExpression') {
     kind = 'var'
+    memberName = view.state.sliceDoc(node.from, node.to)
+  } else if (node.name === 'VariableName') {
+    // 不支持自定义变量
+    diagnostics.push({
+      from: node.from,
+      to: node.to,
+      severity: 'error',
+      message: '变量不存在',
+      markClass: 'iw-editor-formula--error'
+    })
+    return VerifyResult.HIT
   } else {
-    return true
+    return VerifyResult.IGNORE
   }
 
-  let memberName = view.state.sliceDoc(node.node.firstChild?.from, node.node.firstChild?.to)
   if (!memberName.startsWith(props.entrance + '.')) {
-    return true
+    return VerifyResult.IGNORE
   }
   let memberNameSplit = memberName.split('.')
-  let namespace = memberNameSplit[0]
-  let name = memberNameSplit[1]
+  let namespace = memberNameSplit[1]
+  let name = memberNameSplit[2]
   let ns = props.materials.find((ns) => ns.name === namespace)
   if (!ns) {
-    return true
+    diagnostics.push({
+      from: node.from,
+      to: node.to,
+      severity: 'error',
+      message: (kind === 'var' ? '变量' : '函数') + '不存在',
+      markClass: 'iw-editor-formula--error'
+    })
+    return VerifyResult.HIT
   }
 
   if (kind === 'var') {
     let varInfo = (ns.items as VarInfo[]).find((item) => item.name === name)
     if (!varInfo) {
-      return true
+      diagnostics.push({
+        from: node.from,
+        to: node.to,
+        severity: 'error',
+        message: '变量不存在',
+        markClass: 'iw-editor-formula--error'
+      })
+      return VerifyResult.HIT
     }
-    if (varInfo.kind !== expectedOutputKind) {
+    if (varInfo.kind !== expectedOutputKind && expectedOutputKind !== VarKind.ANY) {
       diagnostics.push({
         from: node.from,
         to: node.to,
         severity: 'error',
         message: '期望返回格式为[' + expectedOutputKind + '],实际为[' + varInfo.kind + ']',
-        actions: [
-          {
-            name: '删除',
-            apply(view, from, to) {
-              view.dispatch({ changes: { from, to } })
-            }
-          }
-        ]
+        markClass: 'iw-editor-formula--error'
       })
-      return false
     }
-    return true
-  }
-
-  if (!node.firstChild?.nextSibling?.firstChild) {
-    // not found params
-    return true
-  }
-  let funInfo = (ns.items as FunInfo[]).find((item) => item.name === name)
-  if (!funInfo) {
-    return true
-  }
-
-  let tempParamNode = node.firstChild?.nextSibling?.firstChild!
-  let paramIdx = 0
-  while (tempParamNode.nextSibling != null) {
-    tempParamNode = tempParamNode.nextSibling!
-    let paramName = tempParamNode.name
-    if (paramName === '(' || paramName === ')' || paramName === ',') {
-      continue
-    }
-    if (funInfo.input.length <= paramIdx) {
+  } else {
+    if (!node.firstChild?.nextSibling?.firstChild) {
       diagnostics.push({
         from: node.from,
         to: node.to,
         severity: 'error',
-        message: '期望参数长度为[' + funInfo.input.length + '],实际为[' + (paramIdx + 1) + ']',
-        actions: [
-          {
-            name: '删除',
-            apply(view, from, to) {
-              view.dispatch({ changes: { from, to } })
-            }
-          }
-        ]
+        message: '函数格式错误',
+        markClass: 'iw-editor-formula--error'
       })
-      return false
+      return VerifyResult.HIT
     }
-
-    if (paramName === 'MemberExpression') {
-      if (!verifyExprParamOrVarGuards(tempParamNode, view, funInfo.input[paramIdx].kind, diagnostics)) {
-        return false
-      }
-    }
-    let kindError = false
-    switch (funInfo.input[paramIdx].kind) {
-      case VarKind.STRING: {
-        kindError = paramName !== 'String'
-        break
-      }
-      case VarKind.NUMBER: {
-        kindError = paramName !== 'Number'
-        break
-      }
-      case VarKind.BOOLEAN: {
-        kindError = paramName !== 'BooleanLiteral'
-        break
-      }
-      case VarKind.NULL: {
-        kindError = paramName !== 'null'
-        break
-      }
-      case VarKind.STRINGS: {
-        // TODO
-        kindError = paramName !== 'ArrayExpression'
-        break
-      }
-      case VarKind.NUMBERS: {
-        // TODO
-        kindError = paramName !== 'ArrayExpression'
-        break
-      }
-      case VarKind.BOOLEANS: {
-        // TODO
-        kindError = paramName !== 'ArrayExpression'
-        break
-      }
-      case VarKind.ANY:
-    }
-    if (kindError) {
+    let funInfo = (ns.items as FunInfo[]).find((item) => item.name === name)
+    if (!funInfo) {
       diagnostics.push({
         from: node.from,
         to: node.to,
         severity: 'error',
-        message: '期望参数格式为[' + funInfo.input[paramIdx].kind + '],实际为[' + paramName + ']',
-        actions: [
-          {
-            name: '删除',
-            apply(view, from, to) {
-              view.dispatch({ changes: { from, to } })
-            }
-          }
-        ]
+        message: '函数不存在',
+        markClass: 'iw-editor-formula--error'
       })
-      return false
+      return VerifyResult.HIT
     }
-    if (funInfo.input.length - 1 !== paramIdx || !funInfo.isVarLen) {
-      paramIdx++
+
+    let tempParamNode = node.firstChild?.nextSibling?.firstChild!
+
+    let paramStartOffset = tempParamNode.nextSibling!.from - 1
+    if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== VarKind.ANY) {
+      diagnostics.push({
+        // 只标记方法体
+        from: node.from,
+        to: paramStartOffset,
+        severity: 'error',
+        message: '期望返回格式为[' + expectedOutputKind + '],实际为[' + funInfo.output.kind + ']',
+        markClass: 'iw-editor-formula--error'
+      })
+    }
+
+    let paramIdx = 0
+    while (tempParamNode.nextSibling != null) {
+      tempParamNode = tempParamNode.nextSibling!
+      let paramName = tempParamNode.name
+      if (paramName === '(' || paramName === ')' || paramName === ',') {
+        continue
+      }
+      if (funInfo.input.length <= paramIdx) {
+        diagnostics.push({
+          // 只标记过长的参数
+          from: tempParamNode.from,
+          to: node.to - 1,
+          severity: 'error',
+          message: '期望参数长度为[' + funInfo.input.length + '],实际为[' + (paramIdx + 1) + ']',
+          markClass: 'iw-editor-formula--error'
+        })
+        break
+      }
+
+      if (paramName === 'CallExpression' || paramName === 'MemberExpression' || paramName === 'VariableName') {
+        verifyExprParamOrVarGuards(tempParamNode, view, funInfo.input[paramIdx].kind, diagnostics)
+      } else {
+        let paramKind = null
+        switch (paramName) {
+          case 'String': {
+            paramKind = VarKind.STRING
+            break
+          }
+          case 'Number': {
+            paramKind = VarKind.NUMBER
+            break
+          }
+          case 'BooleanLiteral': {
+            paramKind = VarKind.BOOLEAN
+            break
+          }
+          case 'null': {
+            paramKind = VarKind.NULL
+            break
+          }
+          case 'ArrayExpression': {
+            // TODO
+            paramKind = VarKind.STRINGS
+            break
+          }
+          default: {
+            paramKind = VarKind.ANY
+          }
+        }
+        if (funInfo.input[paramIdx].kind !== paramKind && funInfo.input[paramIdx].kind !== VarKind.ANY) {
+          diagnostics.push({
+            // 只标记错误的参数
+            from: tempParamNode.from,
+            to: tempParamNode.to,
+            severity: 'error',
+            message: '期望参数格式为[' + funInfo.input[paramIdx].kind + '],实际为[' + paramKind + ']',
+            markClass: 'iw-editor-formula--error'
+          })
+        }
+      }
+      if (funInfo.input.length - 1 !== paramIdx || !funInfo.isVarLen) {
+        paramIdx++
+      }
+    }
+    if (paramIdx == 0 && funInfo.input.length !== 0 && !funInfo.isVarLen) {
+      diagnostics.push({
+        // 只标记()
+        from: paramStartOffset,
+        to: node.to,
+        severity: 'error',
+        message: '期望参数长度为[' + funInfo.input.length + '],实际为[0]',
+        markClass: 'iw-editor-formula--error'
+      })
     }
   }
-  return true
+  return VerifyResult.HIT
 }
 
 const ExprParamLinter = linter((view) => {
@@ -543,16 +608,40 @@ const ExprParamLinter = linter((view) => {
     }
   })(view)
 
+  let traceOffset = 0
   syntaxTree(view.state)
-    .cursor()
+    .topNode.cursor()
     .iterate((node) => {
-      verifyExprParamOrVarGuards(node.node, view, VarKind.STRING, diagnostics)
+      if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, view, props.targetVar.kind, diagnostics) !== VerifyResult.IGNORE) {
+        traceOffset = node.to
+      }
     })
+  document.querySelectorAll('.iw-editor-formula__key-word').forEach((element) => {
+    element.classList.remove('iw-editor-formula--error')
+  })
+  diagnostics.forEach((diagnostic) => {
+    if (diagnostic.source === 'eslint') {
+      if (diagnostic.message.includes('Parsing error: Unexpected token')) {
+        diagnostic.message = '公式语法错误'
+        delete diagnostic.source
+      }
+    } else {
+      let view: EditorView = codeEditor.value?.view
+      let posCoords = view.coordsAtPos(diagnostic.from)
+      if (posCoords) {
+        // 处理border-radius导致的偏移
+        const element = document.elementFromPoint(posCoords.left + 10, posCoords.top + 10)
+        if (element?.className.includes('iw-editor-formula__key-word')) {
+          element?.classList.add('iw-editor-formula--error')
+        }
+      }
+    }
+  })
   return diagnostics
 })
 
 const cmExtensions: Extension[] = [
-  placeholders,
+  keyWordPlugin,
   highlightSpecialChars(),
   history(),
   drawSelection(),
@@ -571,100 +660,126 @@ const cmExtensions: Extension[] = [
 
 // -----------------------------
 
-interface materialTree {
-  id: string
-  label: string
-  note: string
-  children?: materialTree[]
-}
-
 const groupBy = <T>(array: T[], predicate: (value: T, index: number, array: T[]) => string) =>
   array.reduce((acc, value, index, array) => {
     ;(acc[predicate(value, index, array)] ||= []).push(value)
     return acc
   }, {} as { [key: string]: T[] })
 
-const materialVars = props.materials
-  .filter((ns) => ns.isVar)
-  .map((ns) => {
-    let byCates = (ns.items as VarInfo[])
-      .map((item) => {
-        return (
-          item.cates?.map((cate) => {
-            return {
-              id: item.name!,
-              label: item.name!,
-              note: item.label ?? '',
-              cate: cate
-            }
-          }) ?? [
-            {
-              id: '',
-              label: '',
-              note: '',
-              cate: ''
-            }
-          ]
-        )
-      })
-      .flat()
-    let grouped = groupBy(byCates, (item) => item?.cate)
-    let items = []
-    for (let cate in grouped) {
-      items.push({
-        id: '',
-        label: cate,
-        note: '',
-        children: grouped[cate]
-      })
-    }
-    return {
-      ns: ns.label,
-      items: items
-    }
-  })
+const materialVars = reactive(
+  props.materials
+    .filter((ns) => ns.isVar)
+    .map((ns) => {
+      let byCates = (ns.items as VarInfo[])
+        .map((item) => {
+          return (
+            item.cates?.map((cate) => {
+              return {
+                id: item.name!,
+                name: item.name!,
+                label: item.label ?? '',
+                note: item.note ?? '',
+                cate: cate
+              }
+            }) ?? [
+              {
+                id: '',
+                name: '',
+                label: '',
+                note: '',
+                cate: ''
+              }
+            ]
+          )
+        })
+        .flat()
+      let grouped = groupBy(byCates, (item) => item?.cate)
+      let items = []
+      for (let cate in grouped) {
+        items.push({
+          id: '',
+          name: cate,
+          label: '',
+          note: '',
+          children: grouped[cate]
+        })
+      }
+      return {
+        nsLabel: ns.label,
+        nsName: ns.name,
+        items: items
+      }
+    })
+)
 
-const materialFuns = props.materials
-  .filter((ns) => !ns.isVar)
-  .map((ns) => {
-    let byCates = (ns.items as FunInfo[])
-      .map((item) => {
-        return (
-          item.cates?.map((cate) => {
-            return {
-              id: item.name,
-              label: item.name,
-              note: item.label ?? '',
-              cate: cate
-            }
-          }) ?? [
-            {
-              id: '',
-              label: '',
-              note: '',
-              cate: ''
-            }
-          ]
-        )
-      })
-      .flat()
-    let grouped = groupBy(byCates, (item) => item?.cate)
-    let items = []
-    for (let cate in grouped) {
-      items.push({
-        id: '',
-        label: cate,
-        note: '',
-        children: grouped[cate]
-      })
-    }
-    return {
-      ns: ns.label,
-      items: items
-    }
-  })
+const materialFuns = reactive(
+  props.materials
+    .filter((ns) => !ns.isVar)
+    .map((ns) => {
+      let byCates = (ns.items as FunInfo[])
+        .map((item) => {
+          return (
+            item.cates?.map((cate) => {
+              return {
+                id: item.name,
+                name: item.name,
+                label: item.label ?? '',
+                note: item.note ?? '',
+                cate: cate
+              }
+            }) ?? [
+              {
+                id: '',
+                name: '',
+                label: '',
+                note: '',
+                cate: ''
+              }
+            ]
+          )
+        })
+        .flat()
+      let grouped = groupBy(byCates, (item) => item?.cate)
+      let items = []
+      for (let cate in grouped) {
+        items.push({
+          id: '',
+          name: cate,
+          label: '',
+          note: '',
+          children: grouped[cate]
+        })
+      }
+      return {
+        nsLabel: ns.label,
+        nsName: ns.name,
+        items: items
+      }
+    })
+)
 
-console.log(materialFuns)
+function insertMaterial(namespace: string, name: string) {
+  let view: EditorView = codeEditor.value?.view
+  const state = view.state
+  const range = state.selection.ranges[0]
+  let isVar = props.materials.find((ns) => ns.name == namespace)?.isVar ?? false
+  let text
+  if (isVar) {
+    text = props.entrance + '.' + namespace + '.' + name + ' '
+  } else {
+    text = props.entrance + '.' + namespace + '.' + name + '()'
+  }
+  view.dispatch({
+    changes: {
+      from: range.from,
+      to: range.to,
+      insert: text
+    },
+    selection: { anchor: isVar ? range.to + text.length : range.to + text.length - 1 }
+  })
+}
+
+const materialNote = ref<String>('')
 </script>
 
 <template>
@@ -679,21 +794,14 @@ console.log(materialFuns)
     <el-row class="iw-editor-material">
       <el-col class="iw-editor-material__var-wrapper" :span="6">
         <el-input placeholder="搜索变量" :prefix-icon="Search" />
-        <el-tabs type="border-card" tab-position="bottom">
+        <el-tabs tab-position="bottom">
           <template v-for="materialVar in materialVars">
-            <el-tab-pane :label="materialVar.ns">
+            <el-tab-pane :label="materialVar.nsLabel">
               <el-tree :data="materialVar.items" node-key="id" accordion empty-text="暂无数据">
-                <template #default="{ node }">
-                  <div class="iw-editor-material__var-item">
-                    <p class="iw-editor-material__var-item-tile">{{ node.label }}</p>
-                    <p class="iw-editor-material__var-item-note">
-                      {{
-                        materialVar.items
-                          .map((item) => item.children)
-                          .flat()
-                          .find((item) => item.label === node.label)?.note
-                      }}
-                    </p>
+                <template #default="{ node, data }">
+                  <div class="iw-editor-material__item" @click="node.isLeaf && insertMaterial(materialVar.nsName, data.name)">
+                    <p class="iw-editor-material__item-tile">{{ data.name }}</p>
+                    <p class="iw-editor-material__item-note">{{ data.label }}</p>
                   </div>
                 </template>
               </el-tree>
@@ -705,21 +813,19 @@ console.log(materialFuns)
         <el-row>
           <el-col class="iw-editor-material__func-list" :span="10">
             <el-input placeholder="搜索函数/API" :prefix-icon="Search" />
-            <el-tabs type="border-card" tab-position="bottom">
+            <el-tabs tab-position="bottom">
               <template v-for="materialFun in materialFuns">
-                <el-tab-pane :label="materialFun.ns">
+                <el-tab-pane :label="materialFun.nsLabel">
                   <el-tree :data="materialFun.items" node-key="id" accordion empty-text="暂无数据">
-                    <template #default="{ node }">
-                      <div class="iw-editor-material__var-item">
-                        <p class="iw-editor-material__var-item-tile">{{ node.label }}</p>
-                        <p class="iw-editor-material__var-item-note">
-                          {{
-                            materialFun.items
-                              .map((item) => item.children)
-                              .flat()
-                              .find((item) => item.label === node.label)?.note
-                          }}
-                        </p>
+                    <template #default="{ node, data }">
+                      <div
+                        class="iw-editor-material__item"
+                        @click="node.isLeaf && insertMaterial(materialFun.nsName, data.name)"
+                        @mouseenter="materialNote = data.note"
+                        @mouseleave="materialNote = ''"
+                      >
+                        <p class="iw-editor-material__item-tile">{{ data.name }}</p>
+                        <p class="iw-editor-material__item-note">{{ data.label }}</p>
                       </div>
                     </template>
                   </el-tree>
@@ -728,8 +834,7 @@ console.log(materialFuns)
             </el-tabs>
           </el-col>
           <el-col class="iw-editor-material__func-note" :span="14">
-            判断一个条件能否满足；如果满足返回一个值，如果不满足则返回另外一个值。 用法：IF(逻辑表达式,为true时返回的值,为false时返回的值)。
-            示例：IF(语文成绩>60,"及格","不及格")，当语文成绩>60时返回及格，否则返回不及格。
+            {{ materialNote }}
           </el-col>
         </el-row>
       </el-col>
@@ -770,14 +875,14 @@ console.log(materialFuns)
     border-right: 1px solid var(--el-border-color);
   }
 
-  @include e('var-item') {
+  @include e('item') {
     p {
       line-height: 1.3;
       margin: 1px 0;
     }
   }
 
-  @include e('var-item-note') {
+  @include e('item-note') {
     color: var(--el-color-info-light-3);
   }
 
@@ -812,6 +917,32 @@ console.log(materialFuns)
 
   .cm-focused {
     outline: none;
+  }
+
+  .cm-line {
+    font-size: 14pt;
+  }
+
+  .cm-lintRange-error {
+    background-image: none;
+  }
+
+  .cm-tooltip.cm-tooltip-autocomplete {
+    border-radius: 4px;
+    font-size: 12pt;
+  }
+
+  .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+    border-radius: 4px;
+  }
+
+  .cm-tooltip.cm-tooltip-autocomplete > ul > li {
+    padding: 2px 0;
+  }
+
+  @include m(error) {
+    border-radius: 4px;
+    border-bottom: 3px solid red;
   }
 }
 
@@ -848,6 +979,16 @@ console.log(materialFuns)
   .el-tree-node__content {
     height: auto;
     padding: 2px 0;
+  }
+
+  .el-tabs__header {
+    padding: 0 6px;
+    border-top: 1px solid var(--el-border-color);
+    border-bottom-width: 0;
+  }
+
+  .el-tabs__nav-wrap::after{
+    background-color: none;
   }
 }
 </style>
