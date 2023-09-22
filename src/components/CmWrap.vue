@@ -11,33 +11,33 @@ import { linter, Diagnostic } from '@codemirror/lint'
 import * as eslint from 'eslint-linter-browserify'
 import { esLint, javascript } from '@codemirror/lang-javascript'
 import { SyntaxNode } from '@lezer/common'
-import { FunInfo, Namespace, VarGuard, VarInfo, VarKind } from '../processes'
+import { iwInterface } from '../processes'
 
 interface Props {
-  targetGuard: VarGuard
-  materials: Namespace[]
-  formula: string
+  targetGuard: iwInterface.VarGuard
+  materials: iwInterface.Namespace[]
+  formulaValue: string
   entrance: string | null
 }
 
-const emit = defineEmits(['update:formula'])
+const emit = defineEmits(['update:formulaValue'])
 
 const props = withDefaults(defineProps<Props>(), {
-  formula: '',
+  formulaValue: '',
   entrance: '$'
 })
 
-const formulaValue: Ref<string> = ref(props.formula)
+const formulaValue: Ref<string> = ref(props.formulaValue)
 
 const codeEditor: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
 
 // -----------------------------
 
 const keyWordMatcher = new MatchDecorator({
-  regexp: new RegExp('\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
+  regexp: new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
   decoration: (match) =>
     Decoration.replace({
-      widget: new KeywordWidget(match[1])
+      widget: new KeywordWidget(match[2])
     })
 })
 
@@ -70,7 +70,12 @@ class KeywordWidget extends WidgetType {
   toDOM() {
     let namespace = this.name.split('.')[0]
     let name = this.name.split('.')[1]
-    let color = props.materials.find((ns) => ns.name === namespace)?.color || '#e9e9eb'
+    let ns = props.materials.find((ns) => ns.name === namespace)
+    let label = name
+    if (ns?.showLabel) {
+      label = ns?.isVar ? (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name : (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
+    }
+    let color = ns?.color || '#e9e9eb'
     let elt = document.createElement('span')
     elt.style.cssText =
       `
@@ -81,7 +86,7 @@ class KeywordWidget extends WidgetType {
       color +
       `;`
     elt.className = 'iw-cm-wrap__key-word'
-    elt.textContent = name
+    elt.textContent = label
     return elt
   }
   ignoreEvent() {
@@ -123,14 +128,15 @@ function completions(context: CompletionContext): CompletionResult | null {
           if (ns?.isVar) {
             return { label: fullName + ' ', type: 'variable', detail: item.label }
           } else {
-            let offset = fullName.length + 1
+            let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
+            let offset = (isAsync ? 'await '.length : 0) + fullName.length + 1
             return {
               label: fullName,
               type: 'function',
               detail: item.label,
               apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                 view.dispatch({
-                  changes: { from, to, insert: fullName + '()' },
+                  changes: { from, to, insert: (isAsync ? 'await ' : '') + fullName + '()' },
                   selection: {
                     anchor: from + offset,
                     head: from + offset
@@ -146,25 +152,26 @@ function completions(context: CompletionContext): CompletionResult | null {
     let options: Completion[] = props.materials
       .map((ns) => {
         if (ns.isVar) {
-          return (ns.items as VarInfo[])
+          return (ns.items as iwInterface.VarInfo[])
             .filter((item) => item.name?.startsWith(text))
             .map((item) => {
               let fullName = props.entrance + '.' + ns.name + '.' + item.name
               return { label: item.name, type: 'variable', detail: item.label + '(' + ns.label + ')', apply: fullName + ' ' } as Completion
             })
         } else {
-          return (ns.items as FunInfo[])
+          return (ns.items as iwInterface.FunInfo[])
             .filter((item) => item.name.startsWith(text))
             .map((item) => {
               let fullName = props.entrance + '.' + ns.name + '.' + item.name
-              let offset = fullName.length + 1
+              let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
+              let offset = (isAsync ? 'await '.length : 0) + fullName.length + 1
               return {
                 label: item.name,
                 type: 'function',
                 detail: item.label + '(' + ns.label + ')',
                 apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                   view.dispatch({
-                    changes: { from, to, insert: fullName + '()' },
+                    changes: { from, to, insert: (isAsync ? 'await ' : '') + fullName + '()' },
                     selection: {
                       anchor: from + offset,
                       head: from + offset
@@ -192,7 +199,7 @@ enum VerifyResult {
   HIT
 }
 
-function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expectedOutputKind: VarKind, diagnostics: Diagnostic[]): VerifyResult {
+function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expectedOutputKind: iwInterface.VarKind, diagnostics: Diagnostic[]): VerifyResult {
   // E.g.
   // code:
   // $.fun.concat($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
@@ -262,7 +269,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
   }
 
   if (kind === 'var') {
-    let varInfo = (ns.items as VarInfo[]).find((item) => item.name === name)
+    let varInfo = (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)
     if (!varInfo) {
       diagnostics.push({
         from: node.from,
@@ -273,7 +280,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
       })
       return VerifyResult.HIT
     }
-    if (varInfo.kind !== expectedOutputKind && expectedOutputKind !== VarKind.ANY) {
+    if (varInfo.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
       diagnostics.push({
         from: node.from,
         to: node.to,
@@ -293,7 +300,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
       })
       return VerifyResult.HIT
     }
-    let funInfo = (ns.items as FunInfo[]).find((item) => item.name === name)
+    let funInfo = (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)
     if (!funInfo) {
       diagnostics.push({
         from: node.from,
@@ -308,7 +315,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
     let tempParamNode = node.firstChild?.nextSibling?.firstChild!
 
     let paramStartOffset = tempParamNode.nextSibling!.from - 1
-    if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== VarKind.ANY) {
+    if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
       diagnostics.push({
         // 只标记方法体
         from: node.from,
@@ -344,31 +351,31 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
         let paramKind = null
         switch (paramName) {
           case 'String': {
-            paramKind = VarKind.STRING
+            paramKind = iwInterface.VarKind.STRING
             break
           }
           case 'Number': {
-            paramKind = VarKind.NUMBER
+            paramKind = iwInterface.VarKind.NUMBER
             break
           }
           case 'BooleanLiteral': {
-            paramKind = VarKind.BOOLEAN
+            paramKind = iwInterface.VarKind.BOOLEAN
             break
           }
           case 'null': {
-            paramKind = VarKind.NULL
+            paramKind = iwInterface.VarKind.NULL
             break
           }
           case 'ArrayExpression': {
             // TODO
-            paramKind = VarKind.STRINGS
+            paramKind = iwInterface.VarKind.STRINGS
             break
           }
           default: {
-            paramKind = VarKind.ANY
+            paramKind = iwInterface.VarKind.ANY
           }
         }
-        if (funInfo.input[paramIdx].kind !== paramKind && funInfo.input[paramIdx].kind !== VarKind.ANY) {
+        if (funInfo.input[paramIdx].kind !== paramKind && funInfo.input[paramIdx].kind !== iwInterface.VarKind.ANY) {
           diagnostics.push({
             // 只标记错误的参数
             from: tempParamNode.from,
@@ -440,16 +447,16 @@ const ExprParamLinter = linter((view) => {
     }
   })
   if (diagnostics.length === 0) {
-    emit('update:formula', formulaValue.value)
+    emit('update:formulaValue', formulaValue.value)
   } else {
-    emit('update:formula', '')
+    emit('update:formulaValue', '')
   }
   return diagnostics
 })
 
 // -----------------------------
 
-export function insertMaterial(namespace: string, name: string) {
+const insertMaterial = (namespace: string, name: string) => {
   let view: EditorView = codeEditor.value?.view
   const state = view.state
   const range = state.selection.ranges[0]
@@ -489,6 +496,12 @@ const cmExtensions: Extension[] = [
   ExprParamLinter,
   keymap.of([...defaultKeymap, ...historyKeymap])
 ]
+
+// -----------------------------
+
+defineExpose({
+  insertMaterial
+})
 </script>
 
 <template>

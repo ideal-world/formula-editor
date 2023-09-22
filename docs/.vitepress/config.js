@@ -25,7 +25,7 @@ module.exports = {
       alias: {
         'formula-editor': path.resolve(__dirname, '../../src')
       },
-      dedupe: ['vue', /element-plus\/.+/]
+      dedupe: ['vue', 'codemirror', 'element-plus', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/, /@element-plus\/.+/],
     }
   }
 }

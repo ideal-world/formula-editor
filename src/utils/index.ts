@@ -1,4 +1,4 @@
-import basic from './basic'
+import * as basic from './basic'
 
 export {
   basic
