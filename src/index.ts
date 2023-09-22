@@ -11,5 +11,5 @@ function install (app: App) {
 export default { install }
 
 export * from './components'
-export * from './constants'
+export * from './processes'
 export * from './utils'
