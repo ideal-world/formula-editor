@@ -2,9 +2,11 @@
 
 # Formula Editor
 
-TODO
+**A relatively complete formula editor.**
 
-## Setup
+![demo.png](demo.png)
+
+### https://ideal-world.github.io/formula-editor/
 
 ---
 Project template from https://github.com/wuruoyun/vue-component-lib-starter

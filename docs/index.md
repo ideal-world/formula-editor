@@ -1,4 +1,15 @@
-# Getting Started
+# Formula Editor
+
+**A relatively complete formula editor.**
+
+## Features
+
+* Visual design
+* Relatively comprehensive error prompts
+* Auto-completion prompts
+* Customizable variables and (synchronous/asynchronous) functions
+* Online debugging (TBD)
+* Advanced code mode (TBD)
 
 ## Setup
 
@@ -8,7 +19,7 @@ In your `package.json`, you shall have the dependencies compatible with the foll
 
 ```json
 "dependencies": {
-  "formula-editor":"^1.0.0",
+  "@idealworld/formula-editor":"^1.0.0",
   "@element-plus/icons-vue": "^2.1.0",
   "element-plus": "^2.3.12",
   "vue": "^3.3.4"
