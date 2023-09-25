@@ -1,6 +1,7 @@
 export default {
     title: 'Formula Editor',
     description: 'A relatively complete formula editor',
+    base: '/formula-editor/',
     themeConfig: {
         nav: [
             {text: 'Introduction', link: '/'},
