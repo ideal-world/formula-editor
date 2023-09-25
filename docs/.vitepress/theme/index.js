@@ -2,7 +2,7 @@ import DefaultTheme from 'vitepress/theme'
 import DemoContainer from '../components/DemoContainer.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import FormulaEditor from 'formula-editor'
+import FormulaEditor from '../../../src'
 
 export default {
   ...DefaultTheme,

@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import {ref} from 'vue'
-import {iwInterface} from "formula-editor";
+import {iwInterface} from '../src';
 
 const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
 const dialogVisible = ref<boolean>(false)
