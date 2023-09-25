@@ -30,16 +30,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: npm ci
 
-      - name: Build project
-        run: npm run build
-
-      - name: Upload production-ready build files
-        uses: actions/upload-artifact@v3
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v2
         with:
-          name: production-files
-          path: ./dist
+          token: ${{ secrets.NPM_TOKEN }}
 
   doc-build:
     name: DocBuild
