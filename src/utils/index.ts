@@ -1,5 +1,5 @@
-import * as basic from './basic'
+import * as IwUtils from './basic'
 
 export {
-  basic
+  IwUtils
 }

@@ -1,5 +1,5 @@
-import Editor from './Editor.vue'
+import IwEditor from './Editor.vue'
 
 export {
-  Editor
+  IwEditor
 }

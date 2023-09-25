@@ -1,6 +1,6 @@
 import { VarKind } from './interface'
 
-const props = {
+export const exampleProps = {
   targetVar: () => ({
     name: 'formName',
     label: '表单名称',
@@ -186,6 +186,3 @@ const props = {
   entrance: '$'
 }
 
-export default {
-  props
-}

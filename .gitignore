@@ -6,3 +6,4 @@ dist-ssr
 docs/.vuepress/.cache
 docs/.vuepress/.temp
 types
+.idea
