@@ -9,13 +9,13 @@ module.exports = {
       {
         text: 'Introduction',
         children: [
-          { text: 'Getting Started', link: '/guide/' }
+          { text: 'Getting Started', link: '/index' }
         ]
       },
       {
-        text: 'Components',
+        text: 'Demo',
         children: [
-          { text: 'Editor', link: '/components/editor' },
+          { text: 'Editor', link: '/editor-demo' },
         ]
       }
     ]

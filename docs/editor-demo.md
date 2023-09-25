@@ -1,11 +1,11 @@
----
+<!-- ---
 sidebar: false
----
+--- -->
 
 <script setup>
-import Basic from './demo/Editor/Basic.vue'
+import EditorDemo from './EditorDemo.vue'
 </script>
 
 <DemoContainer>
-  <Basic/>
+  <EditorDemo/>
 </DemoContainer>
