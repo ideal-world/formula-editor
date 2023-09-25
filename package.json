@@ -1,13 +1,33 @@
 {
-  "name": "formula-editor",
+  "name": "@idealworld/formula-editor",
   "version": "0.1.0",
+  "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
     "docs:dev": "vitepress dev docs --host 0.0.0.0",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs"
   },
-  "peerDependencies": {
+  "keywords": [
+    "formula",
+    "editor",
+    "code"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "gudaoxuri",
+    "email": "i@sunisle.org",
+    "url": "https://idealworld.group/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/formula-editor.es.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "module": "./dist/formula-editor.es.js",
+  "dependencies": {
     "@codemirror/autocomplete": "^6.9.1",
     "@codemirror/commands": "^6.2.5",
     "@codemirror/lang-javascript": "^6.2.1",
@@ -15,12 +35,14 @@
     "@codemirror/state": "^6.2.1",
     "@codemirror/view": "^6.19.0",
     "@lezer/common": "^1.1.0",
-    "@element-plus/icons-vue": "^2.1.0",
     "codemirror": "^6.0.1",
-    "element-plus": "^2.3.12",
     "eslint-linter-browserify": "^8.49.0",
-    "vue": "^3.3.4",
     "vue-codemirror6": "^1.1.27"
+  },
+  "peerDependencies": {
+    "@element-plus/icons-vue": "^2.1.0",
+    "element-plus": "^2.3.12",
+    "vue": "^3.3.4"
   },
   "devDependencies": {
     "@types/node": "^20.3.3",
@@ -40,14 +62,6 @@
     "src",
     "dist"
   ],
-  "module": "./dist/formula-editor.es.js",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/formula-editor.es.js"
-    },
-    "./dist/style.css": "./dist/style.css"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ideal-world/formula-editor.git"
