@@ -1,9 +1,9 @@
 <template>
-  <div style="margin: 8px; color: red">调试结果：{{ formulaValue }}</div>
+  <div style="margin: 8px; color: red">Result：checkPass:{{checkPass}} formulaValue:{{ formulaValue }}</div>
 
   <el-button @click="dialogVisible = true">打开</el-button>
   <el-dialog v-model="dialogVisible">
-    <iw-editor v-model:formulaValue="formulaValue" :targetVar="targetVar" :materials="materials"/>
+    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :targetVar="targetVar" :materials="materials"/>
   </el-dialog>
 </template>
 
@@ -12,6 +12,7 @@ import {ref} from 'vue'
 import {iwInterface} from '../src';
 
 const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
+const checkPass = ref<boolean>(true)
 const dialogVisible = ref<boolean>(false)
 
 const targetVar: iwInterface.VarInfo = {

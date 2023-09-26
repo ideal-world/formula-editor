@@ -37,7 +37,7 @@ interface Props {
   entrance: string | null
 }
 
-const emit = defineEmits(['update:formulaValue'])
+const emit = defineEmits(['update:formulaValue','update:checkPass'])
 
 const props = withDefaults(defineProps<Props>(), {
   formulaValue: '',
@@ -431,7 +431,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
   return VerifyResult.HIT
 }
 
-const ExprParamLinter = linter((view) => {
+const exprParamLinter = linter((view) => {
   let diagnostics: Diagnostic[] = esLint(new eslint.Linter(), {
     // eslint configuration
     parserOptions: {
@@ -474,10 +474,11 @@ const ExprParamLinter = linter((view) => {
     }
   })
   if (diagnostics.length === 0) {
-    emit('update:formulaValue', formulaValue.value)
+    emit('update:checkPass', true)
   } else {
-    emit('update:formulaValue', '')
+    emit('update:checkPass', false)
   }
+  emit('update:formulaValue', formulaValue.value)
   return diagnostics
 })
 
@@ -522,7 +523,7 @@ const cmExtensions: Extension[] = [
   }),
   highlightSelectionMatches(),
   javascript(),
-  ExprParamLinter,
+  exprParamLinter,
   keymap.of([...defaultKeymap, ...historyKeymap])
 ]
 

@@ -7,7 +7,7 @@ import CmWrap from './CmWrap.vue'
 import {EditorProps, FunInfo, VarInfo} from '../processes/interface'
 import {groupBy} from '../utils/basic'
 
-const emit = defineEmits(['update:formulaValue'])
+const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
 
 const props = withDefaults(defineProps<EditorProps>(), exampleProps)
 
@@ -27,12 +27,17 @@ interface Material {
 }
 
 const formulaValue: Ref<string> = ref(props.formulaValue)
+const checkPass: Ref<boolean> = ref(true)
 const CmWrapRef = ref()
 const materialNote = ref<String>('')
 const materialVars = reactive<Material[]>(findMaterials(true, ''))
 const searchMaterialVarKey = ref<string>('')
 const searchMaterialFunKey = ref<string>('')
 const materialFuns = reactive<Material[]>(findMaterials(false, ''))
+
+watch(checkPass, async (newValue) => {
+  emit('update:checkPass', newValue)
+})
 
 watch(formulaValue, async (newValue) => {
   emit('update:formulaValue', newValue)
@@ -164,6 +169,7 @@ function insertMaterial(isLeaf: boolean, ns: string, name: string) {
     </el-row>
     <el-row class="iw-editor-formula">
       <CmWrap ref="CmWrapRef" class="iw-editor-formula--size" v-model:formulaValue="formulaValue"
+              v-model:checkPass="checkPass"
               :targetGuard="targetVar" :materials="materials" :entrance="entrance"/>
     </el-row>
     <el-row class="iw-editor-material">
