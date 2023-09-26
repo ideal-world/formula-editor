@@ -7,9 +7,9 @@
 
 **A relatively complete formula editor.**
 
-![demo-diagnostic.png](.demo-diagnostic.png)
+![demo-diagnostic.png](demo-diagnostic.png)
 
-![demo-debug.png](.demo-debug.png)
+![demo-debug.png](demo-debug.png)
 
 ### https://ideal-world.github.io/formula-editor/
 
