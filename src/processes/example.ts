@@ -42,6 +42,7 @@ export const exampleProps = {
                     note: '年龄',
                     minLen: 18,
                     maxLen: 60,
+                    defaultValue:36,
                     cates: ['基础信息']
                 }
             ]

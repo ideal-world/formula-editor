@@ -36,7 +36,7 @@ const searchMaterialFunKey = ref<string>('')
 const formulaResult = reactive<FormulaResult>({
   materials: [], pass: false, value: ""
 })
-const openDebugPanel = ref<boolean>(true)
+const openDebugPanel = ref<boolean>(false)
 
 function findMaterials(isVar: boolean, filterName: string): Material[] {
   if (isVar) {

@@ -8,8 +8,8 @@
 * Relatively comprehensive error prompts
 * Auto-completion prompts
 * Customizable variables and (synchronous/asynchronous) functions
-* Online debugging (TBD)
-* Advanced code mode (TBD)
+* Online debugging
+* Dynamic formula execution engine
 
 ## Setup
 
