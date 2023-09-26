@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, type Ref} from 'vue'
+import {reactive, ref} from 'vue'
 import {Extension} from '@codemirror/state'
 import {
   highlightSpecialChars,
@@ -30,6 +30,12 @@ import {esLint, javascript} from '@codemirror/lang-javascript'
 import {SyntaxNode} from '@lezer/common'
 import {iwInterface} from '../processes'
 
+export interface FormulaResult {
+  value: string
+  pass: boolean
+  materials: string[]
+}
+
 interface Props {
   targetGuard: iwInterface.VarGuard
   materials: iwInterface.Namespace[]
@@ -37,16 +43,20 @@ interface Props {
   entrance: string | null
 }
 
-const emit = defineEmits(['update:formulaValue','update:checkPass'])
+const emit = defineEmits(['updateFormulaResult'])
 
 const props = withDefaults(defineProps<Props>(), {
   formulaValue: '',
   entrance: '$'
 })
 
-const formulaValue: Ref<string> = ref(props.formulaValue)
+const formulaResult = reactive<FormulaResult>({
+  value: props.formulaValue,
+  pass: true,
+  materials: []
+})
 
-const codeEditor: Ref<InstanceType<typeof CodeMirror> | undefined> = ref()
+const codeEditor = ref<InstanceType<typeof CodeMirror> | undefined>()
 
 // -----------------------------
 
@@ -255,7 +265,6 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
   //      ')'
   //    )
   //  )
-  console.log(node)
   let kind = null
   let memberName
   if (node.name === 'CallExpression' && node.firstChild?.name === 'MemberExpression' && node.firstChild?.firstChild?.name === 'MemberExpression' && node.firstChild?.nextSibling?.name === 'ArgList') {
@@ -428,6 +437,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
       })
     }
   }
+  formulaResult.materials.push(props.entrance + '.' + namespace + '.' + name)
   return VerifyResult.HIT
 }
 
@@ -445,6 +455,7 @@ const exprParamLinter = linter((view) => {
   })(view)
 
   let traceOffset = 0
+  formulaResult.materials = []
   syntaxTree(view.state)
       .topNode.cursor()
       .iterate((node) => {
@@ -473,12 +484,9 @@ const exprParamLinter = linter((view) => {
       }
     }
   })
-  if (diagnostics.length === 0) {
-    emit('update:checkPass', true)
-  } else {
-    emit('update:checkPass', false)
-  }
-  emit('update:formulaValue', formulaValue.value)
+  formulaResult.pass = diagnostics.length === 0;
+  emit('updateFormulaResult', formulaResult)
+  console.log('--------------')
   return diagnostics
 })
 
@@ -535,7 +543,7 @@ defineExpose({
 </script>
 
 <template>
-  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaValue" wrap placeholder="在此输入公式"
+  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap placeholder="在此输入公式"
                :extensions="cmExtensions"/>
 </template>
 

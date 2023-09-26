@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {ElInput} from 'element-plus'
-import {reactive, ref, watch, type Ref} from 'vue'
+import {reactive, ref, watch} from 'vue'
 import {VideoPlay, EditPen, Search} from '@element-plus/icons-vue'
 import {exampleProps} from '../processes/example'
-import CmWrap from './CmWrap.vue'
+import CmWrapComp, {FormulaResult} from './CmWrap.vue'
+import DebugComp from './Debug.vue'
 import {EditorProps, FunInfo, VarInfo} from '../processes/interface'
 import {groupBy} from '../utils/basic'
 
@@ -26,22 +27,12 @@ interface Material {
   items: MaterialItemTree[]
 }
 
-const formulaValue: Ref<string> = ref(props.formulaValue)
-const checkPass: Ref<boolean> = ref(true)
-const CmWrapRef = ref()
+const CmWrapCompRef = ref()
 const materialNote = ref<String>('')
 const materialVars = reactive<Material[]>(findMaterials(true, ''))
+const materialFuns = reactive<Material[]>(findMaterials(false, ''))
 const searchMaterialVarKey = ref<string>('')
 const searchMaterialFunKey = ref<string>('')
-const materialFuns = reactive<Material[]>(findMaterials(false, ''))
-
-watch(checkPass, async (newValue) => {
-  emit('update:checkPass', newValue)
-})
-
-watch(formulaValue, async (newValue) => {
-  emit('update:formulaValue', newValue)
-})
 
 function findMaterials(isVar: boolean, filterName: string): Material[] {
   if (isVar) {
@@ -154,8 +145,15 @@ function searchMaterials(isVar: boolean, filterName: string) {
 }
 
 function insertMaterial(isLeaf: boolean, ns: string, name: string) {
-  isLeaf && CmWrapRef.value.insertMaterial(ns, name)
+  isLeaf && CmWrapCompRef.value.insertMaterial(ns, name)
 }
+
+function watchFormulaResult(formulaResult: FormulaResult) {
+  console.log(formulaResult)
+  emit('update:formulaValue', formulaResult.value)
+  emit('update:checkPass', formulaResult.pass)
+}
+
 </script>
 
 <template>
@@ -168,9 +166,9 @@ function insertMaterial(isLeaf: boolean, ns: string, name: string) {
       </el-col>
     </el-row>
     <el-row class="iw-editor-formula">
-      <CmWrap ref="CmWrapRef" class="iw-editor-formula--size" v-model:formulaValue="formulaValue"
-              v-model:checkPass="checkPass"
-              :targetGuard="targetVar" :materials="materials" :entrance="entrance"/>
+      <cm-wrap-comp ref="CmWrapCompRef" class="iw-editor-formula--size" @updateFormulaResult="watchFormulaResult"
+                    :formulaValue="props.formulaValue" :targetGuard="targetVar" :materials="materials"
+                    :entrance="entrance"/>
     </el-row>
     <el-row class="iw-editor-material">
       <el-col class="iw-editor-material__var-wrapper" :span="6">
@@ -220,6 +218,9 @@ function insertMaterial(isLeaf: boolean, ns: string, name: string) {
         </el-row>
       </el-col>
     </el-row>
+    <!--    <el-row class="iw-editor-debug">-->
+    <!--      <debug-comp materials="" input-params="" :formula-value="formulaResult.value"/>-->
+    <!--    </el-row>-->
   </div>
 </template>
 
