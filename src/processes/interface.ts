@@ -50,5 +50,6 @@ export interface FunInfo {
   isVarLen: boolean
   isAsync: boolean
   output: VarGuard
+  body:string
   cates: string[]
 }

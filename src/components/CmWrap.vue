@@ -486,7 +486,6 @@ const exprParamLinter = linter((view) => {
   })
   formulaResult.pass = diagnostics.length === 0;
   emit('updateFormulaResult', formulaResult)
-  console.log('--------------')
   return diagnostics
 })
 
