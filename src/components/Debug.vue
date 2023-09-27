@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
   entrance: '$'
 })
 
-const inputParams = reactive({})
+const inputParams = reactive<any>({})
 const debugResult = ref<any>(null)
 
 const materialVars = computed(() => {
@@ -52,7 +52,7 @@ async function debug() {
   try {
     spanDom.classList.add('iw-debug__result-span--ok')
     debugResult.value = await iwExecutor.execute(inputParamsMap, props.formulaValue, props.materials, props.entrance)
-  } catch (e) {
+  } catch (e: any) {
     spanDom.classList.add('iw-debug__result-span--error')
     debugResult.value = e.message
   }

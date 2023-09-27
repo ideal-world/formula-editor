@@ -5,6 +5,7 @@ export default (app: App): void => {
     app.component('IwEditor', IwEditor)
 }
 
+// @ts-ignore
 export const IwEditorComp = defineCustomElement(IwEditor)
 
 declare module 'vue' {

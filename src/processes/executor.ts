@@ -232,9 +232,7 @@ export async function execute(inputParams: Map<string, any>, formulaValue: strin
  * }
  */
 function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], entrance: string): any {
-    // TODO
-    //let $ = eval(entrance + '{}')
-    let $ = {}
+    let $: any = {}
     materials.forEach((ns) => {
         if (!$[ns.name]) {
             $[ns.name] = {}
@@ -272,7 +270,7 @@ async function doExecute($: any, formulaValue: string): Promise<any> {
     try {
         const asyncFn = new AsyncFunction('$', `return ` + formulaValue)
         return await asyncFn($)
-    } catch (e) {
+    } catch (e: any) {
         throw new Error('公式执行错误: ' + e.message)
     }
 }
