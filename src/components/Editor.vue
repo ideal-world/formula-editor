@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ElInput} from 'element-plus'
 import {computed, reactive, ref} from 'vue'
-import {VideoPlay, EditPen, Search} from '@element-plus/icons-vue'
+import {VideoPlay, EditPen, Search, ChatLineRound} from '@element-plus/icons-vue'
 import {exampleProps} from '../processes/example'
 import CmWrapComp, {FormulaResult} from './CmWrap.vue'
 import DebugComp from './Debug.vue'
@@ -246,7 +246,15 @@ const filterUsedMaterials = computed(() => {
                 </el-tabs>
               </el-col>
               <el-col class="iw-editor-material__func-note" :span="14">
-                {{ materialNote }}
+                <span v-html="materialNote" v-show="materialNote!==''"/>
+                <div class="iw-editor-material__func-note-tooltip" v-show="materialNote===''">
+                  <ChatLineRound style="width: 2em; height: 2em;"/>
+                  <span>小提示</span>
+                  <span>指向右侧函数时可在此处显示使用说明</span>
+                  <span>点击右侧函数可将其插入公式编辑器光标所在位置</span>
+                  <span>公式编辑器中输入任何字符会显示可用变量/函数列表</span>
+                  <span>公式编辑器中输入 <b>{{props.entrance}}</b> 会显示分类可用列表</span>
+                </div>
               </el-col>
             </el-row>
           </el-col>
@@ -310,6 +318,22 @@ const filterUsedMaterials = computed(() => {
 
   @include e('func-note') {
     padding: 4px;
+  }
+
+  @include e('func-note-tooltip') {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    height: 100%;
+    font-size: 10pt;
+    color: var(--el-color-info-light-7);
+
+    span{
+      padding: 2px 0;
+      text-align: center;
+    }
   }
 }
 </style>

@@ -94,8 +94,7 @@ export const exampleProps = {
                     name: 'sum',
                     label: '求和',
                     note: `获取一组数值的总和。
-用法：SUM(数字1,数字2,...)。
-示例：SUM(语文成绩,数学成绩, 英语成绩)返回三门课程的总分。`,
+用法：SUM(数字1,数字2,...)`,
                     input: [
                         {
                             kind: VarKind.NUMBER
