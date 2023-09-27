@@ -82,13 +82,11 @@ async function debug() {
   font-size: 11pt;
   padding: 4px;
   border-left: 1px solid var(--el-border-color);
+  background-color: var(--el-color-info-light-9);
   height: 100%;
 
   @include e('toolbar') {
-    background-color: var(--el-color-info-light-9);
     padding: 4px;
-    border: 1px solid var(--el-border-color);
-    border-radius: 4px;
     text-align: right;
   }
 

@@ -376,7 +376,7 @@ const filterUsedMaterials = computed(() => {
   }
 
   .el-tabs__nav-wrap::after {
-    background-color: none;
+    height: 0;
   }
 }
 </style>
