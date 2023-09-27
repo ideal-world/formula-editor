@@ -56,6 +56,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test
+        run: |
+          npm run test
+
       - name: Build with VitePress
         run: |
           npm run docs:build
