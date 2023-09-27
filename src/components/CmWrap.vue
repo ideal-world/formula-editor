@@ -161,14 +161,14 @@ function completions(context: CompletionContext): CompletionResult | null {
               return {label: fullName + ' ', type: 'variable', detail: item.label}
             } else {
               let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
-              let offset = (isAsync ? 'await '.length : 0) + fullName.length + 1
+              let offset = (isAsync ? '(await '.length : 0) + fullName.length + 1
               return {
                 label: fullName,
                 type: 'function',
                 detail: item.label,
                 apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                   view.dispatch({
-                    changes: {from, to, insert: (isAsync ? 'await ' : '') + fullName + '()'},
+                    changes: {from, to, insert: (isAsync ? '(await ' : '') + fullName + '()'+ (isAsync ? ')' : '') },
                     selection: {
                       anchor: from + offset,
                       head: from + offset
@@ -201,14 +201,14 @@ function completions(context: CompletionContext): CompletionResult | null {
                 .map((item) => {
                   let fullName = props.entrance + '.' + ns.name + '.' + item.name
                   let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
-                  let offset = (isAsync ? 'await '.length : 0) + fullName.length + 1
+                  let offset = (isAsync ? '(await '.length : 0) + fullName.length + 1
                   return {
                     label: item.name,
                     type: 'function',
                     detail: item.label + '(' + ns.label + ')',
                     apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                       view.dispatch({
-                        changes: {from, to, insert: (isAsync ? 'await ' : '') + fullName + '()'},
+                        changes: {from, to, insert: (isAsync ? '(await ' : '') + fullName + '()'+(isAsync ? ') ' : '')},
                         selection: {
                           anchor: from + offset,
                           head: from + offset
@@ -295,7 +295,7 @@ const insertMaterial = (namespace: string, name: string) => {
     text = props.entrance + '.' + namespace + '.' + name + ' '
   } else {
     let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === name)?.isAsync
-    text = (isAsync ? 'await ' : '') + props.entrance + '.' + namespace + '.' + name + '()'
+    text = (isAsync ? '(await ' : '') + props.entrance + '.' + namespace + '.' + name + '()'+ (isAsync ? ')' : '')
   }
   view.dispatch({
     changes: {
