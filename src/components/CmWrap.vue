@@ -1,34 +1,17 @@
 <script setup lang="ts">
-import {reactive, ref} from 'vue'
-import {Extension} from '@codemirror/state'
-import {
-  highlightSpecialChars,
-  drawSelection,
-  MatchDecorator,
-  Decoration,
-  DecorationSet,
-  EditorView,
-  ViewPlugin,
-  ViewUpdate,
-  WidgetType,
-  keymap
-} from '@codemirror/view'
-import {
-  defaultHighlightStyle,
-  syntaxHighlighting,
-  indentOnInput,
-  bracketMatching,
-  syntaxTree
-} from '@codemirror/language'
-import {autocompletion, closeBrackets, Completion, CompletionResult, CompletionContext} from '@codemirror/autocomplete'
-import {highlightSelectionMatches} from '@codemirror/search'
-import {history, defaultKeymap, historyKeymap} from '@codemirror/commands'
+import { reactive, ref } from 'vue'
+import { Extension } from '@codemirror/state'
+import { highlightSpecialChars, drawSelection, MatchDecorator, Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType, keymap } from '@codemirror/view'
+import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching, syntaxTree } from '@codemirror/language'
+import { autocompletion, closeBrackets, Completion, CompletionResult, CompletionContext } from '@codemirror/autocomplete'
+import { highlightSelectionMatches } from '@codemirror/search'
+import { history, defaultKeymap, historyKeymap } from '@codemirror/commands'
 import CodeMirror from 'vue-codemirror6'
-import {linter, Diagnostic} from '@codemirror/lint'
+import { linter, Diagnostic } from '@codemirror/lint'
 import * as eslint from 'eslint-linter-browserify'
-import {esLint, javascript} from '@codemirror/lang-javascript'
-import {iwInterface} from '../processes'
-import {verifyExprParamOrVarGuards, VerifyResult} from "../processes/cmEditor";
+import { esLint, javascript } from '@codemirror/lang-javascript'
+import { iwInterface } from '../processes'
+import { verifyExprParamOrVarGuards, VerifyResult } from '../processes/cmEditor'
 
 export interface FormulaResult {
   value: string
@@ -63,30 +46,30 @@ const codeEditor = ref<InstanceType<typeof CodeMirror> | undefined>()
 const keywordsMatcher = new MatchDecorator({
   regexp: new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
   decoration: (match) =>
-      Decoration.replace({
-        widget: new KeywordsWidget(match[2])
-      })
+    Decoration.replace({
+      widget: new KeywordsWidget(match[2])
+    })
 })
 
 const keywordsPlugin = ViewPlugin.fromClass(
-    class {
-      placeholders: DecorationSet
+  class {
+    placeholders: DecorationSet
 
-      constructor(view: EditorView) {
-        this.placeholders = keywordsMatcher.createDeco(view)
-      }
-
-      update(update: ViewUpdate) {
-        this.placeholders = keywordsMatcher.updateDeco(update, this.placeholders)
-      }
-    },
-    {
-      decorations: (instance) => instance.placeholders,
-      provide: (plugin) =>
-          EditorView.atomicRanges.of((view) => {
-            return view.plugin(plugin)?.placeholders || Decoration.none
-          })
+    constructor(view: EditorView) {
+      this.placeholders = keywordsMatcher.createDeco(view)
     }
+
+    update(update: ViewUpdate) {
+      this.placeholders = keywordsMatcher.updateDeco(update, this.placeholders)
+    }
+  },
+  {
+    decorations: (instance) => instance.placeholders,
+    provide: (plugin) =>
+      EditorView.atomicRanges.of((view) => {
+        return view.plugin(plugin)?.placeholders || Decoration.none
+      })
+  }
 )
 
 class KeywordsWidget extends WidgetType {
@@ -109,13 +92,13 @@ class KeywordsWidget extends WidgetType {
     let color = ns?.color || '#e9e9eb'
     let elt = document.createElement('span')
     elt.style.cssText =
-        `
+      `
       border-radius: 4px;
       margin: 0 3px;
       padding: 1px 3px;
       background: ` +
-        color +
-        `;`
+      color +
+      `;`
     elt.className = 'iw-cm-wrap__key-word'
     elt.textContent = label
     return elt
@@ -133,9 +116,9 @@ function completions(context: CompletionContext): CompletionResult | null {
   let nameMatch = context.matchBefore(new RegExp('\\' + props.entrance + '\\.\\w*\\.'))
   let wordMatch = context.matchBefore(/\w*/)
   if (
-      (nsMatch == null || (nsMatch.from == nsMatch.to && !context.explicit)) &&
-      (nameMatch == null || (nameMatch.from == nameMatch.to && !context.explicit)) &&
-      (wordMatch == null || (wordMatch.from == wordMatch.to && !context.explicit))
+    (nsMatch == null || (nsMatch.from == nsMatch.to && !context.explicit)) &&
+    (nameMatch == null || (nameMatch.from == nameMatch.to && !context.explicit)) &&
+    (wordMatch == null || (wordMatch.from == wordMatch.to && !context.explicit))
   ) {
     return null
   }
@@ -143,7 +126,7 @@ function completions(context: CompletionContext): CompletionResult | null {
     return {
       from: nsMatch.from,
       options: props.materials.map((ns) => {
-        return {label: props.entrance + '.' + ns.name, type: 'namespace', detail: ns.label}
+        return { label: props.entrance + '.' + ns.name, type: 'namespace', detail: ns.label }
       })
     }
   } else if (nameMatch != null) {
@@ -155,71 +138,71 @@ function completions(context: CompletionContext): CompletionResult | null {
     return {
       from: nameMatch.from,
       options:
-          ns.items.map((item) => {
-            let fullName = props.entrance + '.' + namespace + '.' + item.name
-            if (ns?.isVar) {
-              return {label: fullName + ' ', type: 'variable', detail: item.label}
-            } else {
+        ns.items.map((item) => {
+          let fullName = props.entrance + '.' + namespace + '.' + item.name
+          if (ns?.isVar) {
+            return { label: fullName + ' ', type: 'variable', detail: item.label }
+          } else {
+            let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
+            let offset = (isAsync ? '(await '.length : 0) + fullName.length + 1
+            return {
+              label: fullName,
+              type: 'function',
+              detail: item.label,
+              apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+                view.dispatch({
+                  changes: { from, to, insert: (isAsync ? '(await ' : '') + fullName + '()' + (isAsync ? ')' : '') },
+                  selection: {
+                    anchor: from + offset,
+                    head: from + offset
+                  }
+                })
+              }
+            }
+          }
+        }) ?? []
+    }
+  } else if (wordMatch != null) {
+    let text = wordMatch.text
+    let options: Completion[] = props.materials
+      .map((ns) => {
+        if (ns.isVar) {
+          return (ns.items as iwInterface.VarInfo[])
+            .filter((item) => item.name?.startsWith(text))
+            .map((item) => {
+              let fullName = props.entrance + '.' + ns.name + '.' + item.name
+              return {
+                label: item.name,
+                type: 'variable',
+                detail: item.label + '(' + ns.label + ')',
+                apply: fullName + ' '
+              } as Completion
+            })
+        } else {
+          return (ns.items as iwInterface.FunInfo[])
+            .filter((item) => item.name.startsWith(text))
+            .map((item) => {
+              let fullName = props.entrance + '.' + ns.name + '.' + item.name
               let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
               let offset = (isAsync ? '(await '.length : 0) + fullName.length + 1
               return {
-                label: fullName,
+                label: item.name,
                 type: 'function',
-                detail: item.label,
+                detail: item.label + '(' + ns.label + ')',
                 apply: (view: EditorView, completion: Completion, from: number, to: number) => {
                   view.dispatch({
-                    changes: {from, to, insert: (isAsync ? '(await ' : '') + fullName + '()'+ (isAsync ? ')' : '') },
+                    changes: { from, to, insert: (isAsync ? '(await ' : '') + fullName + '()' + (isAsync ? ') ' : '') },
                     selection: {
                       anchor: from + offset,
                       head: from + offset
                     }
                   })
                 }
-              }
-            }
-          }) ?? []
-    }
-  } else if (wordMatch != null) {
-    let text = wordMatch.text
-    let options: Completion[] = props.materials
-        .map((ns) => {
-          if (ns.isVar) {
-            return (ns.items as iwInterface.VarInfo[])
-                .filter((item) => item.name?.startsWith(text))
-                .map((item) => {
-                  let fullName = props.entrance + '.' + ns.name + '.' + item.name
-                  return {
-                    label: item.name,
-                    type: 'variable',
-                    detail: item.label + '(' + ns.label + ')',
-                    apply: fullName + ' '
-                  } as Completion
-                })
-          } else {
-            return (ns.items as iwInterface.FunInfo[])
-                .filter((item) => item.name.startsWith(text))
-                .map((item) => {
-                  let fullName = props.entrance + '.' + ns.name + '.' + item.name
-                  let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === item.name)?.isAsync
-                  let offset = (isAsync ? '(await '.length : 0) + fullName.length + 1
-                  return {
-                    label: item.name,
-                    type: 'function',
-                    detail: item.label + '(' + ns.label + ')',
-                    apply: (view: EditorView, completion: Completion, from: number, to: number) => {
-                      view.dispatch({
-                        changes: {from, to, insert: (isAsync ? '(await ' : '') + fullName + '()'+(isAsync ? ') ' : '')},
-                        selection: {
-                          anchor: from + offset,
-                          head: from + offset
-                        }
-                      })
-                    }
-                  } as Completion
-                })
-          }
-        })
-        .flat()
+              } as Completion
+            })
+        }
+      })
+      .flat()
     return {
       from: wordMatch.from,
       options: options
@@ -244,15 +227,22 @@ const exprParamLinter = linter((view) => {
     }
   })(view)
 
-  let traceOffset = 0
+  let verifiedNode: [number, number][] = []
   formulaResult.materials = []
   syntaxTree(view.state)
-      .topNode.cursor()
-      .iterate((node) => {
-        if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, view.state, props.targetGuard.kind, diagnostics, props.entrance, namespace => props.materials.find(ns => ns.name === namespace), name => formulaResult.materials.push(name)) !== VerifyResult.IGNORE) {
-          traceOffset = node.to
-        }
-      })
+    .topNode.cursor()
+    .iterate((node) => {
+      verifyExprParamOrVarGuards(
+        node.node,
+        view.state,
+        props.targetGuard.kind,
+        diagnostics,
+        props.entrance,
+        verifiedNode,
+        (namespace) => props.materials.find((ns) => ns.name === namespace),
+        (name) => formulaResult.materials.push(name)
+      )
+    })
 
   document.querySelectorAll('.iw-cm-wrap__key-word').forEach((element) => {
     element.classList.remove('iw-cm-wrap--error')
@@ -277,7 +267,7 @@ const exprParamLinter = linter((view) => {
       }
     }
   })
-  formulaResult.pass = diagnostics.length === 0;
+  formulaResult.pass = diagnostics.length === 0
   emit('updateFormulaResult', formulaResult)
   return diagnostics
 })
@@ -295,7 +285,7 @@ const insertMaterial = (namespace: string, name: string) => {
     text = props.entrance + '.' + namespace + '.' + name + ' '
   } else {
     let isAsync = (ns?.items as iwInterface.FunInfo[]).find((i) => i.name === name)?.isAsync
-    text = (isAsync ? '(await ' : '') + props.entrance + '.' + namespace + '.' + name + '()'+ (isAsync ? ')' : '')
+    text = (isAsync ? '(await ' : '') + props.entrance + '.' + namespace + '.' + name + '()' + (isAsync ? ')' : '')
   }
   view.dispatch({
     changes: {
@@ -303,7 +293,7 @@ const insertMaterial = (namespace: string, name: string) => {
       to: range.to,
       insert: text
     },
-    selection: {anchor: isVar ? range.to + text.length : range.to + text.length - 1}
+    selection: { anchor: isVar ? range.to + text.length : range.to + text.length - 1 }
   })
 }
 
@@ -315,7 +305,7 @@ const cmExtensions: Extension[] = [
   history(),
   drawSelection(),
   indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
   bracketMatching(),
   closeBrackets(),
   autocompletion({
@@ -335,8 +325,7 @@ defineExpose({
 </script>
 
 <template>
-  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap placeholder="在此输入公式"
-               :extensions="cmExtensions"/>
+  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap placeholder="在此输入公式" :extensions="cmExtensions" />
 </template>
 
 <style lang="scss" scoped></style>

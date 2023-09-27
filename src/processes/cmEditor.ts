@@ -1,8 +1,8 @@
-import {SyntaxNode} from "@lezer/common";
-import {iwInterface} from "./index";
-import {Diagnostic} from "@codemirror/lint";
-import {Namespace} from "./interface";
-import {EditorState} from "@codemirror/state";
+import { SyntaxNode } from "@lezer/common";
+import { iwInterface } from "./index";
+import { Diagnostic } from "@codemirror/lint";
+import { Namespace } from "./interface";
+import { EditorState } from "@codemirror/state";
 
 export enum VerifyResult {
     IGNORE,
@@ -10,7 +10,7 @@ export enum VerifyResult {
     PANIC
 }
 
-export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState, expectedOutputKind: iwInterface.VarKind, diagnostics: Diagnostic[], entrance: string, findMaterials: (ns: string) => Namespace | undefined, processHit: (name: string) => void): VerifyResult {
+export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState, expectedOutputKind: iwInterface.VarKind, diagnostics: Diagnostic[], entrance: string, verifiedNode: [number, number][], findMaterials: (ns: string) => Namespace | undefined, processHit: (name: string) => void): VerifyResult {
     // E.g.
     // code:
     // $.fun.concat($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
@@ -41,6 +41,13 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
     //  )
     let kind = null
     let memberName: string
+    if (verifiedNode.find(offset => {
+        let from = offset[0]
+        let to = offset[1]
+        return from <= node.from && to >= node.to
+    })) {
+        return VerifyResult.IGNORE
+    }
     if (node.name === 'CallExpression' && node.firstChild?.name === 'MemberExpression' && node.firstChild?.firstChild?.name === 'MemberExpression' && node.firstChild?.nextSibling?.name === 'ArgList') {
         kind = 'expr'
         memberName = state.sliceDoc(node.firstChild?.from, node.firstChild?.to)
@@ -56,6 +63,7 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
             message: '变量/函数不存在',
             markClass: 'iw-cm-wrap--error'
         })
+        verifiedNode.push([node.from, node.to])
         return VerifyResult.PANIC
     } else {
         return VerifyResult.IGNORE
@@ -76,6 +84,7 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
             message: (kind === 'var' ? '变量' : '函数') + '命名空间不存在',
             markClass: 'iw-cm-wrap--error'
         })
+        verifiedNode.push([node.from, node.to])
         return VerifyResult.PANIC
     }
 
@@ -89,6 +98,7 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
                 message: '变量不存在',
                 markClass: 'iw-cm-wrap--error'
             })
+            verifiedNode.push([node.from, node.to])
             return VerifyResult.PANIC
         }
         if (varInfo.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
@@ -109,6 +119,7 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
                 message: '函数格式错误',
                 markClass: 'iw-cm-wrap--error'
             })
+            verifiedNode.push([node.from, node.to])
             return VerifyResult.PANIC
         }
         let funInfo = (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)
@@ -120,6 +131,7 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
                 message: '函数不存在',
                 markClass: 'iw-cm-wrap--error'
             })
+            verifiedNode.push([node.from, node.to])
             return VerifyResult.PANIC
         }
         let tempParamNode = node.firstChild?.nextSibling?.firstChild!
@@ -162,13 +174,10 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
                 // $.fun.concat($.fun.sum(1)>1?1:$.fun.now(1))
                 // ConditionalExpression(BinaryExpression(CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,")")),CompareOp,Number),LogicOp,Number,LogicOp,CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,")")))
                 // $.fun.concat((await $.fun.httpGet('https://httpbin.org/get')).url)
-                let traceOffset = tempParamNode.from
                 let tempInputKind = funInfo.input[paramIdx].kind
                 tempParamNode.cursor()
                     .iterate((node) => {
-                        if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, state, tempInputKind, diagnostics, entrance, findMaterials, processHit) !== VerifyResult.IGNORE) {
-                            traceOffset = node.to
-                        }
+                        verifyExprParamOrVarGuards(node.node, state, tempInputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
                     })
             } else {
                 let paramKind = null
@@ -225,5 +234,6 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
         }
     }
     processHit(entrance + '.' + namespace + '.' + name)
+    verifiedNode.push([node.from, node.to])
     return VerifyResult.HIT
 }

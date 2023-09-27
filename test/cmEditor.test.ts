@@ -1,12 +1,12 @@
-import {assert, describe, it} from 'vitest'
-import {DEFALUT_FUN_LIB} from "../src/processes/funcLib";
-import {verifyExprParamOrVarGuards, VerifyResult} from "../src/processes/cmEditor";
-import {syntaxTree} from "@codemirror/language";
-import {Namespace, VarInfo, VarKind} from "../src/processes/interface";
-import {Diagnostic} from "@codemirror/lint";
-import {EditorState} from "@codemirror/state";
-import {javascriptLanguage} from "@codemirror/lang-javascript";
-import {iwInterface} from "../src";
+import { assert, describe, it } from 'vitest'
+import { DEFALUT_FUN_LIB } from "../src/processes/funcLib";
+import { verifyExprParamOrVarGuards, VerifyResult } from "../src/processes/cmEditor";
+import { syntaxTree } from "@codemirror/language";
+import { Namespace, VarInfo, VarKind } from "../src/processes/interface";
+import { Diagnostic } from "@codemirror/lint";
+import { EditorState } from "@codemirror/state";
+import { javascriptLanguage } from "@codemirror/lang-javascript";
+import { iwInterface } from "../src";
 
 describe('cmEditor verify', () => {
 
@@ -32,16 +32,14 @@ describe('cmEditor verify', () => {
             extensions: [javascriptLanguage.extension]
         })
         let diagnostics: Diagnostic[] = []
-        let traceOffset = 0
+        let verifiedNode: [number, number][] = []
         let usedMaterials: string[] = []
         syntaxTree(state)
             .topNode.cursor()
             .iterate((node) => {
                 // console.log(node)
                 // console.log('-----------------')
-                if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, state, expectedOutputKind, diagnostics, '$', namespace => materials.find(ns => ns.name === namespace), name => usedMaterials.push(name)) !== VerifyResult.IGNORE) {
-                    traceOffset = node.to
-                }
+                verifyExprParamOrVarGuards(node.node, state, expectedOutputKind, diagnostics, '$', verifiedNode, namespace => materials.find(ns => ns.name === namespace), name => usedMaterials.push(name))
             })
         return [diagnostics, usedMaterials]
     }
