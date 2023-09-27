@@ -242,9 +242,10 @@ function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], 
         if (ns.isVar) {
             (ns.items as VarInfo[]).forEach((varInfo) => {
                 let paramName = entrance + '.' + ns.name + '.' + varInfo.name
-                let paramValue = inputParams.has(paramName) ? inputParams.get(paramName) : varInfo.defaultValue
+                // The value of the variable comes from the input and cannot be taken from the default value
+                let paramValue = inputParams.has(paramName) ? inputParams.get(paramName) : undefined
                 if (paramValue === undefined) {
-                    throw new Error('Param [' + paramName + '] value not exist')
+                    throw new Error('参数 [' + varInfo.label + '] 值不存在')
                 }
                 $[ns.name][varInfo.name!] = paramValue
             })
@@ -272,7 +273,7 @@ async function doExecute($: any, formulaValue: string): Promise<any> {
         const asyncFn = new AsyncFunction('$', `return ` + formulaValue)
         return await asyncFn($)
     } catch (e) {
-        throw new Error('Execute formula error: ' + e.message)
+        throw new Error('公式执行错误: ' + e.message)
     }
 }
 

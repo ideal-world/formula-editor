@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { iwExecutor } from '../processes'
-import { Namespace, VarInfo } from '../processes/interface'
-import { VideoPlay } from '@element-plus/icons-vue'
+import {computed, reactive, ref, watch} from 'vue'
+import {iwExecutor} from '../processes'
+import {Namespace, VarInfo} from '../processes/interface'
+import {VideoPlay} from '@element-plus/icons-vue'
 
 interface Props {
   materials: Namespace[]
@@ -21,28 +21,31 @@ const materialVars = computed(() => {
   debugResult.value = ''
   Object.assign(inputParams, {})
   return props.materials
-    .filter((ns) => ns.isVar)
-    .map((ns) => {
-      let items = (ns.items as VarInfo[]).map((varInfo) => {
-        inputParams[props.entrance + '.' + ns.name + '.' + varInfo.name] = varInfo.defaultValue
+      .filter((ns) => ns.isVar)
+      .map((ns) => {
+        let items = (ns.items as VarInfo[]).map((varInfo) => {
+          inputParams[props.entrance + '.' + ns.name + '.' + varInfo.name] = varInfo.defaultValue
+          return {
+            name: varInfo.name!,
+            label: varInfo.label!,
+            note: varInfo.note
+          }
+        })
         return {
-          name: varInfo.name!,
-          label: varInfo.label!,
-          note: varInfo.note
+          nsLabel: ns.label,
+          nsName: ns.name,
+          items
         }
       })
-      return {
-        nsLabel: ns.label,
-        nsName: ns.name,
-        items
-      }
-    })
 })
 
 async function debug() {
   let inputParamsMap = new Map<string, any>()
   for (let key in inputParams) {
-    inputParamsMap.set(key, inputParams[key])
+    // TODO Empty value handling of facts
+    if (inputParams[key] !== '') {
+      inputParamsMap.set(key, inputParams[key])
+    }
   }
   let spanDom = document.getElementsByClassName('iw-debug__result-span')[0] as HTMLElement
   spanDom.classList.remove('iw-debug__result-span--ok', 'iw-debug__result-span--error')
@@ -65,7 +68,8 @@ async function debug() {
       <el-divider content-position="left">{{ materialVar.nsLabel }}</el-divider>
       <template v-for="varInfo in materialVar.items">
         <el-form-item :label="varInfo.label" class="iw-debug__param">
-          <el-input :placeholder="varInfo.note" v-model="inputParams[props.entrance + '.' + materialVar.nsName + '.' + varInfo.name]" />
+          <el-input :placeholder="varInfo.note"
+                    v-model="inputParams[props.entrance + '.' + materialVar.nsName + '.' + varInfo.name]"/>
         </el-form-item>
       </template>
     </template>
