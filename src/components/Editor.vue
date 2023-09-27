@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import {ElInput} from 'element-plus'
 import {computed, reactive, ref} from 'vue'
-import {VideoPlay, EditPen, Search, ChatLineRound} from '@element-plus/icons-vue'
-import {exampleProps} from '../processes/example'
+import {VideoPlay, Search, ChatLineRound} from '@element-plus/icons-vue'
 import CmWrapComp, {FormulaResult} from './CmWrap.vue'
 import DebugComp from './Debug.vue'
 import {EditorProps, FunInfo, Namespace, VarInfo} from '../processes/interface'
 import {groupBy} from '../utils/basic'
+import {DEFALUT_FUN_LIB} from "../processes/funcLib";
 
 const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
 
-const props = withDefaults(defineProps<EditorProps>(), exampleProps)
+const props = withDefaults(defineProps<EditorProps>(), {
+  addDefaultFunLib: true,
+  entrance: '$',
+})
 
 interface MaterialItemTree {
   id: string
@@ -25,6 +28,10 @@ interface Material {
   nsLabel: string
   nsName: string
   items: MaterialItemTree[]
+}
+
+if(props.addDefaultFunLib){
+  props.materials.unshift(DEFALUT_FUN_LIB)
 }
 
 const CmWrapCompRef = ref()
@@ -382,6 +389,10 @@ const filterUsedMaterials = computed(() => {
     border: none;
     border-radius: 0;
     box-shadow: none;
+
+    .el-tabs__item {
+      padding: 0 7px;
+    }
 
     .el-tab-pane {
       height: 250px;

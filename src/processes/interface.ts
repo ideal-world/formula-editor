@@ -14,6 +14,7 @@ export interface EditorProps {
   materials: Namespace[]
   formulaValue: string
   entrance: string | null
+  addDefaultFunLib: boolean
 }
 
 export interface Namespace {
