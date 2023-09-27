@@ -12,6 +12,7 @@ const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
 
 const props = withDefaults(defineProps<EditorProps>(), {
   addDefaultFunLib: true,
+  formulaValue:'',
   entrance: '$',
 })
 

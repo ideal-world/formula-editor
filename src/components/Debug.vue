@@ -7,7 +7,7 @@ import {VideoPlay} from '@element-plus/icons-vue'
 interface Props {
   materials: Namespace[]
   formulaValue: string
-  entrance: string
+  entrance?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {

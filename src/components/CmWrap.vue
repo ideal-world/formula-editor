@@ -40,7 +40,7 @@ interface Props {
   targetGuard: iwInterface.VarGuard
   materials: iwInterface.Namespace[]
   formulaValue: string
-  entrance: string | null
+  entrance?: string
 }
 
 const emit = defineEmits(['updateFormulaResult'])
@@ -60,24 +60,24 @@ const codeEditor = ref<InstanceType<typeof CodeMirror> | undefined>()
 
 // -----------------------------
 
-const keyWordMatcher = new MatchDecorator({
+const keywordsMatcher = new MatchDecorator({
   regexp: new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
   decoration: (match) =>
       Decoration.replace({
-        widget: new KeywordWidget(match[2])
+        widget: new KeywordsWidget(match[2])
       })
 })
 
-const keyWordPlugin = ViewPlugin.fromClass(
+const keywordsPlugin = ViewPlugin.fromClass(
     class {
       placeholders: DecorationSet
 
       constructor(view: EditorView) {
-        this.placeholders = keyWordMatcher.createDeco(view)
+        this.placeholders = keywordsMatcher.createDeco(view)
       }
 
       update(update: ViewUpdate) {
-        this.placeholders = keyWordMatcher.updateDeco(update, this.placeholders)
+        this.placeholders = keywordsMatcher.updateDeco(update, this.placeholders)
       }
     },
     {
@@ -89,12 +89,12 @@ const keyWordPlugin = ViewPlugin.fromClass(
     }
 )
 
-class KeywordWidget extends WidgetType {
+class KeywordsWidget extends WidgetType {
   constructor(readonly name: string) {
     super()
   }
 
-  eq(other: KeywordWidget) {
+  eq(other: KeywordsWidget) {
     return this.name == other.name
   }
 
@@ -351,7 +351,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
     let tempParamNode = node.firstChild?.nextSibling?.firstChild!
 
     let paramStartOffset = tempParamNode.nextSibling!.from - 1
-    if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
+    if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY && funInfo.output.kind !== iwInterface.VarKind.ANY) {
       diagnostics.push({
         // 只标记方法体，如果是异步函数，需要减去 `await `的长度
         from: node.from + (funInfo.isAsync ? -6 : 0),
@@ -425,7 +425,7 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
             paramKind = iwInterface.VarKind.ANY
           }
         }
-        if (funInfo.input[paramIdx].kind !== paramKind && funInfo.input[paramIdx].kind !== iwInterface.VarKind.ANY) {
+        if (funInfo.input[paramIdx].kind !== paramKind && funInfo.input[paramIdx].kind !== iwInterface.VarKind.ANY && paramKind !== iwInterface.VarKind.ANY) {
           diagnostics.push({
             // 只标记错误的参数
             from: tempParamNode.from,
@@ -534,7 +534,7 @@ const insertMaterial = (namespace: string, name: string) => {
 // -----------------------------
 
 const cmExtensions: Extension[] = [
-  keyWordPlugin,
+  keywordsPlugin,
   highlightSpecialChars(),
   history(),
   drawSelection(),

@@ -12,9 +12,9 @@ export enum VarKind {
 export interface EditorProps {
   targetVar: VarInfo
   materials: Namespace[]
-  formulaValue: string
-  entrance: string | null
-  addDefaultFunLib: boolean
+  formulaValue?: string
+  entrance?: string
+  addDefaultFunLib?: boolean
 }
 
 export interface Namespace {
