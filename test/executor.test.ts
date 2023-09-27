@@ -23,7 +23,7 @@ describe('executor execute()', async () => {
         try {
             await execute(new Map(), "$.field.age", [], "$")
         } catch (e) {
-            assert.equal(e.message, `公式执行错误: Cannot read properties of undefined (reading 'age')err`)
+            assert.equal(e.message, `公式执行错误: Cannot read properties of undefined (reading 'age')`)
         }
     })
 
