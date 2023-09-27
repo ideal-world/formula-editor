@@ -7,7 +7,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 import vue from '@vitejs/plugin-vue'
 import * as path from "path";
 
-module.exports = defineConfig({
+export default defineConfig({
     plugins: [
         vue(),
         AutoImport({
@@ -42,5 +42,9 @@ module.exports = defineConfig({
             }
         },
         emptyOutDir: false
-    }
+    },
+    test: {
+        global: true,
+        environment: "happy-dom"
+    },
 })

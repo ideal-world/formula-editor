@@ -1,12 +1,14 @@
 {
   "name": "@idealworld/formula-editor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
     "docs:dev": "vitepress dev docs --host 0.0.0.0",
     "docs:build": "vitepress build docs",
-    "docs:serve": "vitepress serve docs"
+    "docs:serve": "vitepress serve docs",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "keywords": [
     "formula",
@@ -26,6 +28,7 @@
     },
     "./dist/style.css": "./dist/style.css"
   },
+  "type": "module",
   "module": "./dist/formula-editor.es.js",
   "dependencies": {
     "@codemirror/autocomplete": "^6.9.1",
@@ -47,6 +50,8 @@
   "devDependencies": {
     "@types/node": "^20.3.3",
     "@vitejs/plugin-vue": "^4.2.3",
+    "@vitest/ui": "^0.34.5",
+    "happy-dom": "^12.2.0",
     "rimraf": "^5.0.1",
     "sass": "^1.63.6",
     "scss": "^0.2.4",
@@ -56,6 +61,7 @@
     "unplugin-vue-components": "^0.25.2",
     "vite": "^4.4.9",
     "vitepress": "1.0.0-rc.20",
+    "vitest": "^0.34.5",
     "vue-tsc": "^1.8.13"
   },
   "files": [

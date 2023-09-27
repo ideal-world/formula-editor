@@ -91,7 +91,7 @@ export const DEFALUT_FUN_LIB =
                 output: {
                     kind: VarKind.ANY
                 },
-                body: `return await fetch(arguments[0]).then(res=>res.json())`,
+                body: `return await (await fetch(arguments[0])).json()`,
                 cates: ['API']
             }
         ]
