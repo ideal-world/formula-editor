@@ -380,9 +380,23 @@ function verifyExprParamOrVarGuards(node: SyntaxNode, view: EditorView, expected
         })
         break
       }
-
       if (paramName === 'CallExpression' || paramName === 'MemberExpression' || paramName === 'VariableName') {
         verifyExprParamOrVarGuards(tempParamNode, view, funInfo.input[paramIdx].kind, diagnostics)
+      } else if (paramName === 'ConditionalExpression' || paramName === 'BinaryExpression' || paramName === 'LogicOp' || paramName === 'CompareOp') {
+        // $.fun.concat($.fun.now()>0?1:2)
+        // ConditionalExpression(BinaryExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),CompareOp,Number),LogicOp,Number,LogicOp,Number)
+        // $.fun.sum(1,2)>0?1:2
+        // ConditionalExpression(BinaryExpression(CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,",",Number,")")),CompareOp,Number),LogicOp,Number,LogicOp,Number)
+        // $.fun.concat($.fun.sum(1)>1?1:$.fun.now(1))
+        // ConditionalExpression(BinaryExpression(CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,")")),CompareOp,Number),LogicOp,Number,LogicOp,CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,")")))
+        let traceOffset = tempParamNode.from
+        let tempInputKind = funInfo.input[paramIdx].kind
+        tempParamNode.cursor()
+            .iterate((node) => {
+              if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, view, tempInputKind, diagnostics) !== VerifyResult.IGNORE) {
+                traceOffset = node.to
+              }
+            })
       } else {
         let paramKind = null
         switch (paramName) {
@@ -454,26 +468,15 @@ const exprParamLinter = linter((view) => {
     }
   })(view)
 
+  let traceOffset = 0
   formulaResult.materials = []
-  let syntax = syntaxTree(view.state).topNode.node.node
-  if (syntax.name === 'Script'
-      && syntax.firstChild?.name === 'ExpressionStatement'
-      // $.field.age
-      // >> Script(ExpressionStatement(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName)))
-      // $.fun.sum(1,2)
-      // >> Script(ExpressionStatement(CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,",",Number,")"))))
-      && (syntax.firstChild?.firstChild?.name === 'CallExpression' || syntax.firstChild?.firstChild?.name === 'MemberExpression')
-  ) {
-    verifyExprParamOrVarGuards(syntax.firstChild!.firstChild!, view, props.targetGuard.kind, diagnostics)
-  } else {
-    diagnostics.push({
-      from: syntax.from,
-      to: syntax.to,
-      severity: 'error',
-      message: '只支持公式形式',
-      markClass: 'iw-cm-wrap--error'
-    })
-  }
+  syntaxTree(view.state)
+      .topNode.cursor()
+      .iterate((node) => {
+        if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, view, props.targetGuard.kind, diagnostics) !== VerifyResult.IGNORE) {
+          traceOffset = node.to
+        }
+      })
 
   document.querySelectorAll('.iw-cm-wrap__key-word').forEach((element) => {
     element.classList.remove('iw-cm-wrap--error')
