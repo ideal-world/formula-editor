@@ -581,14 +581,17 @@ defineExpose({
   .cm-tooltip.cm-tooltip-autocomplete {
     border-radius: 4px;
     font-size: 12pt;
+    padding: 4px;
   }
 
   .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
     border-radius: 4px;
+    color: var(--el-text-color-primary);
+    background-color: var(--el-color-primary-light-8);
   }
 
   .cm-tooltip.cm-tooltip-autocomplete > ul > li {
-    padding: 2px 0;
+    padding: 8px 0;
   }
 
   @include m(error) {
