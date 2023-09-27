@@ -27,7 +27,7 @@ import CodeMirror from 'vue-codemirror6'
 import {linter, Diagnostic} from '@codemirror/lint'
 import * as eslint from 'eslint-linter-browserify'
 import {esLint, javascript} from '@codemirror/lang-javascript'
-import {SyntaxNode} from '@lezer/common'
+import {SyntaxNode, Tree} from '@lezer/common'
 import {iwInterface} from '../processes'
 
 export interface FormulaResult {
@@ -454,24 +454,38 @@ const exprParamLinter = linter((view) => {
     }
   })(view)
 
-  let traceOffset = 0
   formulaResult.materials = []
-  syntaxTree(view.state)
-      .topNode.cursor()
-      .iterate((node) => {
-        if (traceOffset <= node.from && verifyExprParamOrVarGuards(node.node, view, props.targetGuard.kind, diagnostics) !== VerifyResult.IGNORE) {
-          traceOffset = node.to
-        }
-      })
+  let syntax = syntaxTree(view.state).topNode.node.node
+  if (syntax.name === 'Script'
+      && syntax.firstChild?.name === 'ExpressionStatement'
+      // $.field.age
+      // >> Script(ExpressionStatement(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName)))
+      // $.fun.sum(1,2)
+      // >> Script(ExpressionStatement(CallExpression(MemberExpression(MemberExpression(VariableName,".",PropertyName),".",PropertyName),ArgList("(",Number,",",Number,")"))))
+      && (syntax.firstChild?.firstChild?.name === 'CallExpression' || syntax.firstChild?.firstChild?.name === 'MemberExpression')
+  ) {
+    verifyExprParamOrVarGuards(syntax.firstChild!.firstChild!, view, props.targetGuard.kind, diagnostics)
+  } else {
+    diagnostics.push({
+      from: syntax.from,
+      to: syntax.to,
+      severity: 'error',
+      message: '只支持公式形式',
+      markClass: 'iw-cm-wrap--error'
+    })
+  }
+
   document.querySelectorAll('.iw-cm-wrap__key-word').forEach((element) => {
     element.classList.remove('iw-cm-wrap--error')
   })
   diagnostics.forEach((diagnostic) => {
     if (diagnostic.source === 'eslint') {
-      if (diagnostic.message.includes('Parsing error: Unexpected token')) {
+      if (diagnostic.message.includes('Parsing error: Unterminated string constant')) {
+        diagnostic.message = '未终止的字符串常量'
+      } else {
         diagnostic.message = '公式语法错误'
-        delete diagnostic.source
       }
+      delete diagnostic.source
     } else {
       let view: EditorView = codeEditor.value?.view
       let posCoords = view.coordsAtPos(diagnostic.from)
