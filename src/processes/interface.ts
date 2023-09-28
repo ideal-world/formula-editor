@@ -22,7 +22,7 @@ export interface Namespace {
   label: string
   color?: string
   isVar: boolean
-  showLabel:boolean,
+  showLabel: boolean,
   items: VarInfo[] | FunInfo[]
 }
 
@@ -51,6 +51,6 @@ export interface FunInfo {
   isVarLen: boolean
   isAsync: boolean
   output: VarGuard
-  body:string
+  body: string
   cates: string[]
 }

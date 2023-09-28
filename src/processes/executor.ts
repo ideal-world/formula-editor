@@ -1,4 +1,4 @@
-import {FunInfo, Namespace, VarInfo} from "./interface";
+import { FunInfo, Namespace, VarInfo } from './interface'
 
 /**
  * Execute the formula
@@ -88,9 +88,7 @@ import {FunInfo, Namespace, VarInfo} from "./interface";
  *                 {
  *                     name: 'sum',
  *                     label: '求和',
- *                     note: `获取一组数值的总和。
- * 用法：SUM(数字1,数字2,...)。
- * 示例：SUM(语文成绩,数学成绩, 英语成绩)返回三门课程的总分。`,
+ *                     note: `获取一组数值的总和`,
  *                     input: [
  *                         {
  *                             kind: VarKind.NUMBER
@@ -120,8 +118,7 @@ import {FunInfo, Namespace, VarInfo} from "./interface";
  *                 {
  *                     name: 'concat',
  *                     label: '合并文本',
- *                     note: `将多个文本合并成一个文本。
- * 用法：CONCATENATE(文本1,文本2,...)。`,
+ *                     note: `将多个文本合并成一个文本`,
  *                     input: [
  *                         {
  *                             kind: VarKind.ANY
@@ -190,8 +187,8 @@ import {FunInfo, Namespace, VarInfo} from "./interface";
  * @param entrance E.g. $
  */
 export async function execute(inputParams: Map<string, any>, formulaValue: string, materials: Namespace[], entrance: string): Promise<any> {
-    let $ = packageEntrance(inputParams, materials, entrance)
-    return await doExecute($, formulaValue)
+  let $ = packageEntrance(inputParams, materials, entrance)
+  return await doExecute($, formulaValue)
 }
 
 /**
@@ -232,47 +229,47 @@ export async function execute(inputParams: Map<string, any>, formulaValue: strin
  * }
  */
 function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], entrance: string): any {
-    let $: any = {}
-    materials.forEach((ns) => {
-        if (!$[ns.name]) {
-            $[ns.name] = {}
+  let $: any = {}
+  materials.forEach((ns) => {
+    if (!$[ns.name]) {
+      $[ns.name] = {}
+    }
+    if (ns.isVar) {
+      (ns.items as VarInfo[]).forEach((varInfo) => {
+        let paramName = entrance + '.' + ns.name + '.' + varInfo.name
+        // The value of the variable comes from the input and cannot be taken from the default value
+        let paramValue = inputParams.has(paramName) ? inputParams.get(paramName) : undefined
+        if (paramValue === undefined) {
+          throw new Error('参数 [' + varInfo.label + '] 值不存在')
         }
-        if (ns.isVar) {
-            (ns.items as VarInfo[]).forEach((varInfo) => {
-                let paramName = entrance + '.' + ns.name + '.' + varInfo.name
-                // The value of the variable comes from the input and cannot be taken from the default value
-                let paramValue = inputParams.has(paramName) ? inputParams.get(paramName) : undefined
-                if (paramValue === undefined) {
-                    throw new Error('参数 [' + varInfo.label + '] 值不存在')
-                }
-                $[ns.name][varInfo.name!] = paramValue
-            })
+        $[ns.name][varInfo.name!] = paramValue
+      })
+    } else {
+      (ns.items as FunInfo[]).forEach((funInfo) => {
+        if (funInfo.isAsync) {
+          const AsyncFunction = Object.getPrototypeOf(async function() {
+          }).constructor
+          $[ns.name][funInfo.name] = new AsyncFunction(funInfo.body)
         } else {
-            (ns.items as FunInfo[]).forEach((funInfo) => {
-                if (funInfo.isAsync) {
-                    const AsyncFunction = Object.getPrototypeOf(async function () {
-                    }).constructor;
-                    $[ns.name][funInfo.name] = new AsyncFunction(funInfo.body)
-                } else {
-                    const syncFunction = Object.getPrototypeOf(function () {
-                    }).constructor;
-                    $[ns.name][funInfo.name] = new syncFunction(funInfo.body)
-                }
-            })
+          const syncFunction = Object.getPrototypeOf(function() {
+          }).constructor
+          $[ns.name][funInfo.name] = new syncFunction(funInfo.body)
         }
-    })
-    return $
+      })
+    }
+  })
+  return $
 }
 
 async function doExecute($: any, formulaValue: string): Promise<any> {
-    const AsyncFunction = Object.getPrototypeOf(async function () {
-    }).constructor;
-    try {
-        const asyncFn = new AsyncFunction('$', `return ` + formulaValue)
-        return await asyncFn($)
-    } catch (e: any) {
-        throw new Error('公式执行错误: ' + e.message)
-    }
+  const AsyncFunction = Object.getPrototypeOf(async function() {
+  }).constructor
+  try {
+    const asyncFn = new AsyncFunction('$', `return ` + formulaValue)
+    return await asyncFn($)
+  } catch (e: any) {
+    throw new Error('公式执行错误: ' + e.message)
+  }
 }
 
 

@@ -1,17 +1,17 @@
-import {App, defineCustomElement} from 'vue'
-import {IwEditor} from './components'
+import { App, defineCustomElement } from 'vue'
+import { IwEditor } from './components'
 
 export default (app: App): void => {
-    app.component('IwEditor', IwEditor)
+  app.component('IwEditor', IwEditor)
 }
 
 // @ts-ignore
 export const IwEditorComp = defineCustomElement(IwEditor)
 
 declare module 'vue' {
-    export interface GlobalComponents {
-        'IwEditor': typeof IwEditorComp,
-    }
+  export interface GlobalComponents {
+    'IwEditor': typeof IwEditorComp,
+  }
 }
 
 export * from './processes'
