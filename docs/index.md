@@ -86,6 +86,7 @@ Import components from this library in your own component:
 <script setup lang="ts">
     import {iwInterface} from "formula-editor";
 
+    const checkPass = ref<boolean>(true)
     const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
     const dialogVisible = ref<boolean>(false)
 
@@ -174,7 +175,15 @@ Import components from this library in your own component:
 <template>
     <el-button @click="dialogVisible = true">打开</el-button>
     <el-dialog v-model="dialogVisible">
-        <iw-editor v-model:formulaValue="formulaValue" :targetVar="targetVar" :materials="materials"/>
+        <iw-editor
+        <!-- formula value -->
+        v-model:formulaValue="formulaValue"
+        <!-- Check the formula correct -->
+        v-model:checkPass="checkPass"
+        <!-- Target object of the formula -->
+        :targetVar="targetVar"
+        <!-- Material collection -->
+        :materials="materials"/>
     </el-dialog>
 </template>
 ```
