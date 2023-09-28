@@ -1,6 +1,6 @@
 import { assert, describe, it } from 'vitest'
 import { DEFAULT_FUN_LIB } from '../src/processes/funcLib'
-import { verifyExprParamOrVarGuards } from '../src/processes/cmEditor'
+import { diagnosticFormula } from '../src/processes/cmEditor'
 import { syntaxTree } from '@codemirror/language'
 import { Namespace, VarInfo, VarKind } from '../src/processes/interface'
 import { Diagnostic } from '@codemirror/lint'
@@ -40,7 +40,7 @@ describe('cmEditor verify', () => {
     syntaxTree(state)
       .topNode.cursor()
       .iterate((node) => {
-        verifyExprParamOrVarGuards(node.node, state, expectedOutputKind, diagnostics, '$', verifiedNode, namespace => materials.find(ns => ns.name === namespace), name => {
+        diagnosticFormula(node.node, state, expectedOutputKind, diagnostics, '$', verifiedNode, namespace => materials.find(ns => ns.name === namespace), name => {
           if (!usedMaterials.includes(name)) {
             usedMaterials.push(name)
           }

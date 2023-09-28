@@ -1,5 +1,8 @@
 import { VarKind } from './interface'
 
+/**
+ * Default function library
+ */
 export const DEFAULT_FUN_LIB =
   {
     name: 'fun',

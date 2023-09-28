@@ -1,4 +1,4 @@
-<script setup lang='ts'>
+<script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { Extension } from '@codemirror/state'
 import { Decoration, DecorationSet, drawSelection, EditorView, highlightSpecialChars, keymap, MatchDecorator, ViewPlugin, ViewUpdate, WidgetType } from '@codemirror/view'
@@ -11,7 +11,7 @@ import { Diagnostic, linter } from '@codemirror/lint'
 import * as eslint from 'eslint-linter-browserify'
 import { esLint, javascript } from '@codemirror/lang-javascript'
 import { iwInterface } from '../processes'
-import { verifyExprParamOrVarGuards } from '../processes/cmEditor'
+import { diagnosticFormula } from '../processes/cmEditor'
 
 export interface FormulaResult {
   value: string
@@ -41,43 +41,16 @@ const formulaResult = reactive<FormulaResult>({
 
 const codeEditor = ref<InstanceType<typeof CodeMirror> | undefined>()
 
-// -----------------------------
+// --------------------------------------
+// Decoration processing of material keywords
+// --------------------------------------
 
-const keywordsMatcher = new MatchDecorator({
-  regexp: new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
-  decoration: (match) =>
-    Decoration.replace({
-      widget: new KeywordsWidget(match[2]),
-    }),
-})
-
-const keywordsPlugin = ViewPlugin.fromClass(
-  class {
-    placeholders: DecorationSet
-
-    constructor(view: EditorView) {
-      this.placeholders = keywordsMatcher.createDeco(view)
-    }
-
-    update(update: ViewUpdate) {
-      this.placeholders = keywordsMatcher.updateDeco(update, this.placeholders)
-    }
-  },
-  {
-    decorations: (instance) => instance.placeholders,
-    provide: (plugin) =>
-      EditorView.atomicRanges.of((view) => {
-        return view.plugin(plugin)?.placeholders || Decoration.none
-      }),
-  },
-)
-
-class KeywordsWidget extends WidgetType {
+class IwEditorKeywordsWidget extends WidgetType {
   constructor(readonly name: string) {
     super()
   }
 
-  eq(other: KeywordsWidget) {
+  eq(other: IwEditorKeywordsWidget) {
     return this.name == other.name
   }
 
@@ -87,7 +60,9 @@ class KeywordsWidget extends WidgetType {
     let ns = props.materials.find((ns) => ns.name === namespace)
     let label = name
     if (ns?.showLabel) {
-      label = ns?.isVar ? (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name : (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
+      label = ns?.isVar
+        ? (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name
+        : (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
     }
     let color = ns?.color || '#e9e9eb'
     let elt = document.createElement('span')
@@ -109,7 +84,38 @@ class KeywordsWidget extends WidgetType {
   }
 }
 
-// -----------------------------
+const IwEditorKeywordsMatcher = new MatchDecorator({
+  regexp: new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g'),
+  decoration: (match) =>
+    Decoration.replace({
+      widget: new IwEditorKeywordsWidget(match[2]),
+    }),
+})
+
+const iwEditorKeywordsPlugin = ViewPlugin.fromClass(
+  class {
+    placeholders: DecorationSet
+
+    constructor(view: EditorView) {
+      this.placeholders = IwEditorKeywordsMatcher.createDeco(view)
+    }
+
+    update(update: ViewUpdate) {
+      this.placeholders = IwEditorKeywordsMatcher.updateDeco(update, this.placeholders)
+    }
+  },
+  {
+    decorations: (instance) => instance.placeholders,
+    provide: (plugin) =>
+      EditorView.atomicRanges.of((view) => {
+        return view.plugin(plugin)?.placeholders || Decoration.none
+      }),
+  },
+)
+
+// --------------------------------------
+// Automatic material processing
+// --------------------------------------
 
 function completions(context: CompletionContext): CompletionResult | null {
   let nsMatch = context.matchBefore(new RegExp('\\' + props.entrance + '\\.*'))
@@ -220,9 +226,11 @@ function completions(context: CompletionContext): CompletionResult | null {
   }
 }
 
-// -----------------------------
+// --------------------------------------
+// Formula format diagnostic processing
+// --------------------------------------
 
-const exprParamLinter = linter((view) => {
+const iwEditorLinter = linter((view) => {
   let diagnostics: Diagnostic[] = esLint(new eslint.Linter(), {
     // eslint configuration
     parserOptions: {
@@ -240,7 +248,7 @@ const exprParamLinter = linter((view) => {
   syntaxTree(view.state)
     .topNode.cursor()
     .iterate((node) => {
-      verifyExprParamOrVarGuards(
+      diagnosticFormula(
         node.node,
         view.state,
         props.targetGuard.kind,
@@ -271,20 +279,24 @@ const exprParamLinter = linter((view) => {
       let view: EditorView = codeEditor.value?.view
       let posCoords = view.coordsAtPos(diagnostic.from)
       if (posCoords) {
-        // 处理border-radius导致的偏移
+        // Process offset caused by border radius
         const element = document.elementFromPoint(posCoords.left + 10, posCoords.top + 10)
         if (element?.className.includes('iw-cm-wrap__key-word')) {
+          // Add error styling to material decorator
           element?.classList.add('iw-cm-wrap--error')
         }
       }
     }
   })
   formulaResult.pass = diagnostics.length === 0
+  // Notify formula result updates
   emit('updateFormulaResult', formulaResult)
   return diagnostics
 })
 
-// -----------------------------
+// --------------------------------------
+// Receive material inserted into formula
+// --------------------------------------
 
 const insertMaterial = (namespace: string, name: string) => {
   let view: EditorView = codeEditor.value?.view
@@ -309,10 +321,14 @@ const insertMaterial = (namespace: string, name: string) => {
   })
 }
 
+defineExpose({
+  insertMaterial,
+})
+
 // -----------------------------
 
 const cmExtensions: Extension[] = [
-  keywordsPlugin,
+  iwEditorKeywordsPlugin,
   highlightSpecialChars(),
   history(),
   drawSelection(),
@@ -325,25 +341,18 @@ const cmExtensions: Extension[] = [
   }),
   highlightSelectionMatches(),
   javascript(),
-  exprParamLinter,
+  iwEditorLinter,
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ]
-
-// -----------------------------
-
-defineExpose({
-  insertMaterial,
-})
 </script>
 
 <template>
-  <code-mirror class='iw-cm-wrap' ref='codeEditor' v-model='formulaResult.value' wrap placeholder='在此输入公式'
-               :extensions='cmExtensions' />
+  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap placeholder="在此输入公式" :extensions="cmExtensions" />
 </template>
 
-<style lang='scss' scoped></style>
+<style lang="scss" scoped></style>
 
-<style lang='scss'>
+<style lang="scss">
 @import '../assets/main.scss';
 
 @include b('cm-wrap') {

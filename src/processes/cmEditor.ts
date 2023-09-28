@@ -4,7 +4,14 @@ import { Diagnostic } from '@codemirror/lint'
 import { Namespace } from './interface'
 import { EditorState } from '@codemirror/state'
 
-
+/**
+ * Add diagnostic information
+ *
+ * @param diagnostics diagnostic information collection
+ * @param message error description
+ * @param from The starting position of the error in the formula
+ * @param to wrong ending group in formula
+ */
 function addDiagnostic(diagnostics: Diagnostic[], message: string, from: number, to: number) {
   diagnostics.push({
     from: from,
@@ -15,50 +22,68 @@ function addDiagnostic(diagnostics: Diagnostic[], message: string, from: number,
   })
 }
 
-export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState, expectedOutputKind: iwInterface.VarKind, diagnostics: Diagnostic[], entrance: string, verifiedNode: [number, number][], findMaterials: (ns: string) => Namespace | undefined, processHit: (name: string) => void) {
-  // E.g.
-  // code:
-  // $.fun.concat($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
-  //
-  // syntaxTree:
-  //  CallExpression(
-  //    MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
-  //    ArgList(
-  //      '(',
-  //      CallExpression(
-  //        MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
-  //        ArgList('(', Number, ',', MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName), ')')
-  //      ),
-  //      ',',
-  //      Number,
-  //      ',',
-  //      BooleanLiteral,
-  //      ',',
-  //      ArrayExpression('[', String, ',', String, ']'),
-  //      ',',
-  //      String,
-  //      ',',
-  //      null,
-  //      ',',
-  //      MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
-  //      ')'
-  //    )
-  //  )
+/**
+ * Diagnose errors in formulas
+ *
+ * @param currNode current node error
+ * @param state formula state
+ * @param expectedOutputKind expected output type
+ * @param diagnostics diagnostic collection
+ * @param entrance material entrance variable name
+ * @param diagnosedNode The start and end position of the diagnosed node
+ * @param findMaterials Query material information
+ * @param processHit material hit processing
+ * 
+ * E.g.
+ * code:
+ * $.fun.concat($.fun.sum(1, $.field.age),3, true, ['1','2'], 'string', null, $.param.someVar)
+ *
+ * syntaxTree:
+ *  CallExpression(
+ *    MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
+ *    ArgList(
+ *      '(',
+ *      CallExpression(
+ *        MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
+ *        ArgList('(', Number, ',', MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName), ')')
+ *      ),
+ *      ',',
+ *      Number,
+ *      ',',
+ *      BooleanLiteral,
+ *      ',',
+ *      ArrayExpression('[', String, ',', String, ']'),
+ *      ',',
+ *      String,
+ *      ',',
+ *      null,
+ *      ',',
+ *      MemberExpression(MemberExpression(VariableName, '.', PropertyName), '.', PropertyName),
+ *      ')'
+ *    )
+ *  ) 
+ */
+export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expectedOutputKind: iwInterface.VarKind, diagnostics: Diagnostic[], entrance: string, diagnosedNode: [number, number][], findMaterials: (ns: string) => Namespace | undefined, processHit: (name: string) => void): void {
+  // console.debug('#node:' + currNode + '#from:' + currNode.from + '#to:' + currNode.to + '#kind' + expectedOutputKind)
 
-  // console.debug('#node:' + node + '#from:' + node.from + '#to:' + node.to + '#kind' + expectedOutputKind)
-
-  // 排除已处理的token
-  if (verifiedNode.find(offset => {
+  /**
+   * Exclude processed tokens
+   */
+  if (diagnosedNode.find(offset => {
     let from = offset[0]
     let to = offset[1]
-    return from <= node.from && to >= node.to
+    return from <= currNode.from && to >= currNode.to
   })) {
     return
   }
 
-  // 基本类型处理
+  /**
+   * ----------------------------------
+   * Basic type processing
+   * ----------------------------------
+   */
   let paramKind = null
-  switch (node.name) {
+  switch (currNode.name) {
     case 'String': {
       paramKind = iwInterface.VarKind.STRING
       break
@@ -83,91 +108,107 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
   }
   if (paramKind != null) {
     if (expectedOutputKind !== paramKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
-      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + paramKind + ']', node.from, node.to)
+      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + paramKind + ']', currNode.from, currNode.to)
     }
-    verifiedNode.push([node.from, node.to])
+    diagnosedNode.push([currNode.from, currNode.to])
     return
   }
 
-  // 括号表达式处理
-  if (node.name === 'ParenthesizedExpression') {
+  /**
+  * ----------------------------------
+  * Parentheses expression processing
+  * ----------------------------------
+  */
+  if (currNode.name === 'ParenthesizedExpression') {
     // (1+0+3)
     // ParenthesizedExpression("(",BinaryExpression(BinaryExpression(Number,ArithOp,Number),ArithOp,Number),")")
-    let expr = node.firstChild?.nextSibling
+    let expr = currNode.firstChild?.nextSibling
     if (!expr) {
-      addDiagnostic(diagnostics, '括号格式错误', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+      addDiagnostic(diagnostics, '括号格式错误', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
-    verifyExprParamOrVarGuards(expr, state, expectedOutputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
+    diagnosticFormula(expr, state, expectedOutputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
     return
   }
 
-  // 二元表达式处理
-  if (node.name === 'BinaryExpression') {
+  /**
+  * ----------------------------------
+  * Binary expression processing
+  * ----------------------------------
+  */
+  if (currNode.name === 'BinaryExpression') {
     // $.field.age>3
     // BinaryExpression(MemberExpression(MemberExpression(VariableName, ".", PropertyName), ".", PropertyName), CompareOp, Number)
-    let left = node.firstChild
+    let left = currNode.firstChild
     let op = left?.nextSibling
     let right = op?.nextSibling
     if (!left || !op || !right) {
-      addDiagnostic(diagnostics, '二元表达式格式错误', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+      addDiagnostic(diagnostics, '二元表达式格式错误', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
-    // 比较运算符下，左右两边可以是任意类型
+    // Under comparison operators, the left and right sides can be of any type
     let expectedInputKind = op.name === 'CompareOp' ? iwInterface.VarKind.ANY : expectedOutputKind
-    verifyExprParamOrVarGuards(left, state, expectedInputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
-    verifyExprParamOrVarGuards(right, state, expectedInputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
+    diagnosticFormula(left, state, expectedInputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
+    diagnosticFormula(right, state, expectedInputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
     return
   }
 
-  // 条件表达式处理
-  if (node.name === 'ConditionalExpression') {
+  /**
+  * ----------------------------------
+  * Conditional expression processing
+  * ----------------------------------
+  */
+  if (currNode.name === 'ConditionalExpression') {
     // false?'1':$.field.age>3?(1?'222':'333'):'22'
-    //     ConditionalExpression(
-    //         BooleanLiteral, LogicOp, String, LogicOp, ConditionalExpression(
-    //             BinaryExpression(MemberExpression(MemberExpression(VariableName, ".", PropertyName), ".", PropertyName), CompareOp, Number),
-    //             LogicOp,
-    //             ParenthesizedExpression("(", ConditionalExpression(
-    //                 Number, LogicOp, String, LogicOp, String
-    //                 ), ")"),
-    //             LogicOp,
-    //             String
-    //         )
-    //     )
-    let cond = node.firstChild
+    // ConditionalExpression(
+    //   BooleanLiteral, LogicOp, String, LogicOp, ConditionalExpression(
+    //     BinaryExpression(MemberExpression(MemberExpression(VariableName, ".", PropertyName), ".", PropertyName), CompareOp, Number),
+    //     LogicOp,
+    //     ParenthesizedExpression("(", ConditionalExpression(
+    //       Number, LogicOp, String, LogicOp, String
+    //       ), ")"),
+    //     LogicOp,
+    //     String
+    //   )
+    // )
+    let cond = currNode.firstChild
     let trueResult = cond?.nextSibling?.nextSibling
     let falseResult = trueResult?.nextSibling?.nextSibling
     if (!cond || !trueResult || !falseResult) {
-      addDiagnostic(diagnostics, '条件表达式格式错误', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+      addDiagnostic(diagnostics, '条件表达式格式错误', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
-    verifyExprParamOrVarGuards(cond, state, iwInterface.VarKind.BOOLEAN, diagnostics, entrance, verifiedNode, findMaterials, processHit)
-    verifyExprParamOrVarGuards(trueResult, state, expectedOutputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
-    verifyExprParamOrVarGuards(falseResult, state, expectedOutputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
+    diagnosticFormula(cond, state, iwInterface.VarKind.BOOLEAN, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
+    diagnosticFormula(trueResult, state, expectedOutputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
+    diagnosticFormula(falseResult, state, expectedOutputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
     return
   }
 
+  /**
+  * ----------------------------------
+  * Contains material token processing
+  * ----------------------------------
+  */
   let kind = null
   let memberName: string
-  if (node.name === 'CallExpression' && node.firstChild?.name === 'MemberExpression' && node.firstChild?.firstChild?.name === 'MemberExpression' && node.firstChild?.nextSibling?.name === 'ArgList') {
+  if (currNode.name === 'CallExpression' && currNode.firstChild?.name === 'MemberExpression' && currNode.firstChild?.firstChild?.name === 'MemberExpression' && currNode.firstChild?.nextSibling?.name === 'ArgList') {
     kind = 'expr'
-    memberName = state.sliceDoc(node.firstChild?.from, node.firstChild?.to)
-  } else if (node.name === 'MemberExpression' && node.firstChild?.name === 'MemberExpression') {
+    memberName = state.sliceDoc(currNode.firstChild?.from, currNode.firstChild?.to)
+  } else if (currNode.name === 'MemberExpression' && currNode.firstChild?.name === 'MemberExpression') {
     kind = 'var'
-    memberName = state.sliceDoc(node.from, node.to)
-  } else if (node.name === 'VariableName') {
-    // 不支持自定义变量
-    addDiagnostic(diagnostics, '变量/函数不存在', node.from, node.to)
-    verifiedNode.push([node.from, node.to])
+    memberName = state.sliceDoc(currNode.from, currNode.to)
+  } else if (currNode.name === 'VariableName') {
+    // Custom variables are not supported
+    addDiagnostic(diagnostics, '变量/函数不存在', currNode.from, currNode.to)
+    diagnosedNode.push([currNode.from, currNode.to])
     return
   } else {
     return
   }
 
-  // 变量/函数处理
   if (!memberName.startsWith(entrance + '.')) {
     return
   }
@@ -176,47 +217,48 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
   let name = memberNameSplit[2]
   let ns = findMaterials(namespace)
   if (!ns) {
-    addDiagnostic(diagnostics, (kind === 'var' ? '变量' : '函数') + '命名空间不存在', node.from, node.to)
-    verifiedNode.push([node.from, node.to])
+    addDiagnostic(diagnostics, (kind === 'var' ? '变量' : '函数') + '命名空间不存在', currNode.from, currNode.to)
+    diagnosedNode.push([currNode.from, currNode.to])
     return
   }
 
   if (kind === 'var') {
     let varInfo = (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)
     if (!varInfo) {
-      addDiagnostic(diagnostics, '变量不存在', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+      addDiagnostic(diagnostics, '变量不存在', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
     if (varInfo.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
       diagnostics.push({
-        from: node.from,
-        to: node.to,
+        from: currNode.from,
+        to: currNode.to,
         severity: 'error',
         message: '期望格式为[' + expectedOutputKind + '],实际为[' + varInfo.kind + ']',
         markClass: 'iw-cm-wrap--error',
       })
     }
   } else {
-    if (!node.firstChild?.nextSibling?.firstChild) {
-      addDiagnostic(diagnostics, '函数格式错误', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+    if (!currNode.firstChild?.nextSibling?.firstChild) {
+      addDiagnostic(diagnostics, '函数格式错误', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
     let funInfo = (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)
     if (!funInfo) {
-      addDiagnostic(diagnostics, '函数不存在', node.from, node.to)
-      verifiedNode.push([node.from, node.to])
+      addDiagnostic(diagnostics, '函数不存在', currNode.from, currNode.to)
+      diagnosedNode.push([currNode.from, currNode.to])
       return
     }
-    let tempParamNode = node.firstChild?.nextSibling?.firstChild!
 
+    let tempParamNode = currNode.firstChild?.nextSibling?.firstChild!
     let paramStartOffset = tempParamNode.nextSibling!.from - 1
     if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY && funInfo.output.kind !== iwInterface.VarKind.ANY) {
-      // 只标记方法体，如果是异步函数，需要减去 `await `的长度
-      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + funInfo.output.kind + ']', node.from + (funInfo.isAsync ? -6 : 0), paramStartOffset)
+      // Only mark the method body. If it is an asynchronous function, you need to subtract the length of `await`
+      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + funInfo.output.kind + ']', currNode.from + (funInfo.isAsync ? -6 : 0), paramStartOffset)
     }
 
+    // Function parameter checking
     let paramIdx = 0
     let realParamLen = 0
     while (tempParamNode.nextSibling != null) {
@@ -226,30 +268,32 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
         continue
       }
       if (funInfo.input.length <= paramIdx) {
-        // 只标记过长的参数
-        addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[' + (paramIdx + 1) + ']', tempParamNode.from, node.to - 1)
+        // Only mark parameters that are too long
+        addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[' + (paramIdx + 1) + ']', tempParamNode.from, currNode.to - 1)
         break
       }
       let tempInputKind = funInfo.input[paramIdx].kind
       tempParamNode.cursor()
         .iterate((node) => {
-          verifyExprParamOrVarGuards(node.node, state, tempInputKind, diagnostics, entrance, verifiedNode, findMaterials, processHit)
+          diagnosticFormula(node.node, state, tempInputKind, diagnostics, entrance, diagnosedNode, findMaterials, processHit)
         })
       if (funInfo.input.length - 1 !== paramIdx || !funInfo.isVarLen) {
+        // This judgment is used to ensure that when the last parameter is a variable-length parameter, it will not be included in the actual parameter length.
         paramIdx++
       }
       realParamLen++
     }
     if (paramIdx === 0 && funInfo.input.length !== 0 && !funInfo.isVarLen) {
-      // 只标记()
-      addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[0]', paramStartOffset, node.to)
+      // Only mark () 
+      addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[0]', paramStartOffset, currNode.to)
     }
     if (realParamLen === 0 && funInfo.isVarLen) {
-      // 只标记函数
-      addDiagnostic(diagnostics, '缺少参数', node.from, paramStartOffset)
+      // Only mark functions
+      addDiagnostic(diagnostics, '缺少参数', currNode.from, paramStartOffset)
     }
   }
+  // Process hit
   processHit(entrance + '.' + namespace + '.' + name)
-  verifiedNode.push([node.from, node.to])
+  diagnosedNode.push([currNode.from, currNode.to])
   return
 }
