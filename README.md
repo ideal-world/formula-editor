@@ -2,9 +2,10 @@
 
 # Formula Editor
 
-![npm](https://img.shields.io/npm/v/%40idealworld%2Fformula-editor)
-![GitHub](https://img.shields.io/github/license/ideal-world/formula-editor)
-![GitHub last commit](https://img.shields.io/github/last-commit/ideal-world/formula-editor)
+[![NPM](https://img.shields.io/npm/v/%40idealworld%2Fformula-editor)](https://www.npmjs.com/package/@idealworld/formula-editor) 
+[![GitHub](https://img.shields.io/github/license/ideal-world/formula-editor)](https://github.com/ideal-world/formula-editor) 
+[![Last Commit](https://img.shields.io/github/last-commit/ideal-world/formula-editor)](https://github.com/ideal-world/formula-editor/commits/main) 
+[![Build Status](https://github.com/ideal-world/formula-editor/actions/workflows/CICD.yml/badge.svg?branch=main)](https://github.com/ideal-world/formula-editor/actions/workflows/CICD.yml)
 
 **A relatively complete formula editor.**
 
