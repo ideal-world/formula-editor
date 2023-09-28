@@ -1,4 +1,4 @@
-<script setup lang='ts'>
+<script setup lang="ts">
 import { ElInput } from 'element-plus'
 import { computed, reactive, ref } from 'vue'
 import { ChatLineRound, Search, VideoPlay } from '@element-plus/icons-vue'
@@ -32,7 +32,19 @@ interface Material {
 }
 
 if (props.addDefaultFunLib) {
-  props.materials.unshift(DEFAULT_FUN_LIB)
+  let customFunNs = props.materials.find((ns) => ns.name === DEFAULT_FUN_LIB.name)
+  if (customFunNs) {
+    let customFuns = customFunNs.items as FunInfo[]
+    let defaultFuns = DEFAULT_FUN_LIB.items as FunInfo[]
+    defaultFuns.forEach((funInfo) => {
+      if (customFuns.find((fun) => fun.name === funInfo.name)) {
+        return
+      }
+      customFuns.push(funInfo)
+    })
+  } else {
+    props.materials.unshift(DEFAULT_FUN_LIB)
+  }
 }
 
 const CmWrapCompRef = ref()
@@ -42,7 +54,9 @@ const materialFuns = reactive<Material[]>(findMaterials(false, ''))
 const searchMaterialVarKey = ref<string>('')
 const searchMaterialFunKey = ref<string>('')
 const formulaResult = reactive<FormulaResult>({
-  materials: [], pass: false, value: '',
+  materials: [],
+  pass: false,
+  value: '',
 })
 const openDebugPanel = ref<boolean>(false)
 
@@ -168,63 +182,65 @@ function watchFormulaResult(_formulaResult: FormulaResult) {
   emit('update:checkPass', _formulaResult.pass)
 }
 
-
 const filterUsedMaterials = computed(() => {
   let formulaMaterials = formulaResult.materials
-  return props.materials.map((ns) => {
-    let items
-    if (ns.isVar) {
-      items = (ns.items as VarInfo[]).filter((varInfo) => {
-        let name = props.entrance + '.' + ns.name + '.' + varInfo.name
-        return formulaMaterials.includes(name)
-      })
-    } else {
-      items = (ns.items as FunInfo[]).filter((funInfo) => {
-        let name = props.entrance + '.' + ns.name + '.' + funInfo.name
-        return formulaMaterials.includes(name)
-      })
-    }
-    return {
-      name: ns.name,
-      label: ns.label,
-      isVar: ns.isVar,
-      items: items,
-    } as Namespace
-  })
+  return props.materials
+    .map((ns) => {
+      let items
+      if (ns.isVar) {
+        items = (ns.items as VarInfo[]).filter((varInfo) => {
+          let name = props.entrance + '.' + ns.name + '.' + varInfo.name
+          return formulaMaterials.includes(name)
+        })
+      } else {
+        items = (ns.items as FunInfo[]).filter((funInfo) => {
+          let name = props.entrance + '.' + ns.name + '.' + funInfo.name
+          return formulaMaterials.includes(name)
+        })
+      }
+      return {
+        name: ns.name,
+        label: ns.label,
+        isVar: ns.isVar,
+        items: items,
+      } as Namespace
+    })
     .filter((ns) => ns.items.length > 0)
 })
-
 </script>
 
 <template>
-  <div class='iw-editor'>
+  <div class="iw-editor">
     <el-row>
-      <el-col class='iw-editor-main' :span='openDebugPanel?16:24'>
-        <el-row class='iw-editor-toolbar'>
-          <el-col :span='12'>{{ props.targetVar.label }}</el-col>
-          <el-col :span='12' class='iw-editor-toolbar__opt'>
-            <el-button :icon='VideoPlay' link @click='openDebugPanel=!openDebugPanel'>调试</el-button>
+      <el-col class="iw-editor-main" :span="openDebugPanel ? 16 : 24">
+        <el-row class="iw-editor-toolbar">
+          <el-col :span="12">{{ props.targetVar.label }}</el-col>
+          <el-col :span="12" class="iw-editor-toolbar__opt">
+            <el-button :icon="VideoPlay" link @click="openDebugPanel = !openDebugPanel">调试</el-button>
           </el-col>
         </el-row>
-        <el-row class='iw-editor-formula'>
-          <cm-wrap-comp ref='CmWrapCompRef' class='iw-editor-formula--size'
-                        @update-formula-result='watchFormulaResult'
-                        :formula-value='props.formulaValue' :target-guard='targetVar' :materials='materials'
-                        :entrance='entrance' />
+        <el-row class="iw-editor-formula">
+          <cm-wrap-comp
+            ref="CmWrapCompRef"
+            class="iw-editor-formula--size"
+            @update-formula-result="watchFormulaResult"
+            :formula-value="props.formulaValue"
+            :target-guard="targetVar"
+            :materials="materials"
+            :entrance="entrance"
+          />
         </el-row>
-        <el-row class='iw-editor-material'>
-          <el-col class='iw-editor-material__var-wrapper' :span='6'>
-            <el-input placeholder='搜索变量' v-model='searchMaterialVarKey' :prefix-icon='Search'
-                      @input='searchMaterials(true, searchMaterialVarKey)' />
-            <el-tabs tab-position='bottom'>
-              <template v-for='materialVar in materialVars'>
-                <el-tab-pane :label='materialVar.nsLabel'>
-                  <el-tree :data='materialVar.items' node-key='id' accordion empty-text='暂无数据'>
-                    <template #default='{ node, data }'>
-                      <div class='iw-editor-material__item'
-                           @click='insertMaterial(node.isLeaf, materialVar.nsName, data.name)'>
-                        <p class='iw-editor-material__item-tile'>{{ data.name }}</p>
-                        <p class='iw-editor-material__item-note'>{{ data.label }}</p>
+        <el-row class="iw-editor-material">
+          <el-col class="iw-editor-material__var-wrapper" :span="6">
+            <el-input placeholder="搜索变量" v-model="searchMaterialVarKey" :prefix-icon="Search" @input="searchMaterials(true, searchMaterialVarKey)" />
+            <el-tabs tab-position="bottom">
+              <template v-for="materialVar in materialVars">
+                <el-tab-pane :label="materialVar.nsLabel">
+                  <el-tree :data="materialVar.items" node-key="id" accordion empty-text="暂无数据">
+                    <template #default="{ node, data }">
+                      <div class="iw-editor-material__item" @click="insertMaterial(node.isLeaf, materialVar.nsName, data.name)">
+                        <p class="iw-editor-material__item-tile">{{ data.name }}</p>
+                        <p class="iw-editor-material__item-note">{{ data.label }}</p>
                       </div>
                     </template>
                   </el-tree>
@@ -232,24 +248,23 @@ const filterUsedMaterials = computed(() => {
               </template>
             </el-tabs>
           </el-col>
-          <el-col class='iw-editor-material__func-wrapper' :span='18'>
+          <el-col class="iw-editor-material__func-wrapper" :span="18">
             <el-row>
-              <el-col class='iw-editor-material__func-list' :span='10'>
-                <el-input placeholder='搜索函数/API' v-model='searchMaterialFunKey'
-                          :prefix-icon='Search'
-                          @input='searchMaterials(false, searchMaterialFunKey)' />
-                <el-tabs tab-position='bottom'>
-                  <template v-for='materialFun in materialFuns'>
-                    <el-tab-pane :label='materialFun.nsLabel'>
-                      <el-tree :data='materialFun.items' node-key='id' accordion
-                               empty-text='暂无数据'>
-                        <template #default='{ node, data }'>
-                          <div class='iw-editor-material__item'
-                               @click='insertMaterial(node.isLeaf, materialFun.nsName, data.name)'
-                               @mouseenter='materialNote = data.note'
-                               @mouseleave="materialNote = ''">
-                            <p class='iw-editor-material__item-tile'>{{ data.name }}</p>
-                            <p class='iw-editor-material__item-note'>{{ data.label }}</p>
+              <el-col class="iw-editor-material__func-list" :span="10">
+                <el-input placeholder="搜索函数/API" v-model="searchMaterialFunKey" :prefix-icon="Search" @input="searchMaterials(false, searchMaterialFunKey)" />
+                <el-tabs tab-position="bottom">
+                  <template v-for="materialFun in materialFuns">
+                    <el-tab-pane :label="materialFun.nsLabel">
+                      <el-tree :data="materialFun.items" node-key="id" accordion empty-text="暂无数据">
+                        <template #default="{ node, data }">
+                          <div
+                            class="iw-editor-material__item"
+                            @click="insertMaterial(node.isLeaf, materialFun.nsName, data.name)"
+                            @mouseenter="materialNote = data.note"
+                            @mouseleave="materialNote = ''"
+                          >
+                            <p class="iw-editor-material__item-tile">{{ data.name }}</p>
+                            <p class="iw-editor-material__item-note">{{ data.label }}</p>
                           </div>
                         </template>
                       </el-tree>
@@ -257,30 +272,31 @@ const filterUsedMaterials = computed(() => {
                   </template>
                 </el-tabs>
               </el-col>
-              <el-col class='iw-editor-material__func-note' :span='14'>
-                <span v-html='materialNote' v-show="materialNote!==''" />
-                <div class='iw-editor-material__func-note-tooltip' v-show="materialNote===''">
-                  <ChatLineRound style='width: 2em; height: 2em;' />
+              <el-col class="iw-editor-material__func-note" :span="14">
+                <span v-html="materialNote" v-show="materialNote !== ''" />
+                <div class="iw-editor-material__func-note-tooltip" v-show="materialNote === ''">
+                  <ChatLineRound style="width: 2em; height: 2em" />
                   <span>小提示</span>
                   <span>指向右侧函数时可在此处显示使用说明</span>
                   <span>点击右侧函数可将其插入公式编辑器光标所在位置</span>
                   <span>公式编辑器中输入任何字符会显示可用变量/函数列表</span>
-                  <span>公式编辑器中输入 <b>{{ props.entrance }}</b> 会显示分类可用列表</span>
+                  <span
+                    >公式编辑器中输入 <b>{{ props.entrance }}</b> 会显示分类可用列表</span
+                  >
                 </div>
               </el-col>
             </el-row>
           </el-col>
         </el-row>
       </el-col>
-      <el-col class='iw-editor-debug' :span='openDebugPanel?8:0' v-show='openDebugPanel'>
-        <debug-comp v-model:materials='filterUsedMaterials' v-model:formula-value='formulaResult.value'
-                    :entrance='props.entrance' />
+      <el-col class="iw-editor-debug" :span="openDebugPanel ? 8 : 0" v-show="openDebugPanel">
+        <debug-comp v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" :entrance="props.entrance" />
       </el-col>
     </el-row>
   </div>
 </template>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 @import '../assets/main.scss';
 
 @include b('editor') {
@@ -350,7 +366,7 @@ const filterUsedMaterials = computed(() => {
 }
 </style>
 
-<style lang='scss'>
+<style lang="scss">
 @import '../assets/main.scss';
 
 @include b('editor-formula') {
