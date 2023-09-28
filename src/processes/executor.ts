@@ -1,7 +1,7 @@
 import { FunInfo, Namespace, VarInfo } from './interface'
 
 /**
- * Execute the formula
+ * Formula execution engine
  * 
  * @param inputParams input parameters
  * @param formulaValue the formula to be executed
@@ -169,10 +169,10 @@ function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], 
  * @returns execution results
  */
 async function doExecute($: any, formulaValue: string): Promise<any> {
-  const AsyncFunction = Object.getPrototypeOf(async function () {
+  const asyncFunction = Object.getPrototypeOf(async function () {
   }).constructor
   try {
-    const asyncFn = new AsyncFunction('$', `return ` + formulaValue)
+    const asyncFn = new asyncFunction('$', `return ` + formulaValue)
     return await asyncFn($)
   } catch (e: any) {
     throw new Error('公式执行错误: ' + e.message)

@@ -5,7 +5,8 @@ export default {
     themeConfig: {
         nav: [
             {text: 'Introduction', link: '/'},
-            {text: 'Demo', link: '/editor-demo'}
+            {text: 'Edit Demo', link: '/editor-demo'},
+            {text: 'Execute Demo', link: '/executor-demo'}
         ],
         socialLinks: [
             {icon: 'github', link: 'https://github.com/ideal-world/formula-editor'}
