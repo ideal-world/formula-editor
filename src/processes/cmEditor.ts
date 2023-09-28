@@ -1,8 +1,8 @@
-import { SyntaxNode } from "@lezer/common";
-import { iwInterface } from "./index";
-import { Diagnostic } from "@codemirror/lint";
-import { Namespace } from "./interface";
-import { EditorState } from "@codemirror/state";
+import {SyntaxNode} from "@lezer/common";
+import {iwInterface} from "./index";
+import {Diagnostic} from "@codemirror/lint";
+import {Namespace} from "./interface";
+import {EditorState} from "@codemirror/state";
 
 export enum VerifyResult {
     IGNORE,
@@ -39,8 +39,8 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
     //      ')'
     //    )
     //  )
-    let kind = null
-    let memberName: string
+    console.debug('#node:' + node + '#from:' + node.from + '#to:' + node.to)
+
     if (verifiedNode.find(offset => {
         let from = offset[0]
         let to = offset[1]
@@ -48,6 +48,50 @@ export function verifyExprParamOrVarGuards(node: SyntaxNode, state: EditorState,
     })) {
         return VerifyResult.IGNORE
     }
+
+    let paramKind = null
+    switch (node.name) {
+        case 'String': {
+            paramKind = iwInterface.VarKind.STRING
+            break
+        }
+        case 'Number': {
+            paramKind = iwInterface.VarKind.NUMBER
+            break
+        }
+        case 'BooleanLiteral': {
+            paramKind = iwInterface.VarKind.BOOLEAN
+            break
+        }
+        case 'null': {
+            paramKind = iwInterface.VarKind.NULL
+            break
+        }
+        case 'ArrayExpression': {
+            // TODO
+            paramKind = iwInterface.VarKind.STRINGS
+            break
+        }
+    }
+    if (paramKind != null) {
+        verifiedNode.push([node.from, node.to])
+        if (expectedOutputKind !== paramKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
+            diagnostics.push({
+                from: node.from,
+                to: node.to,
+                severity: 'error',
+                message: '期望返回格式为[' + expectedOutputKind + '],实际为[' + paramKind + ']',
+                markClass: 'iw-cm-wrap--error'
+            })
+            return VerifyResult.PANIC
+        } else {
+            return VerifyResult.HIT
+        }
+    }
+
+
+    let kind = null
+    let memberName: string
     if (node.name === 'CallExpression' && node.firstChild?.name === 'MemberExpression' && node.firstChild?.firstChild?.name === 'MemberExpression' && node.firstChild?.nextSibling?.name === 'ArgList') {
         kind = 'expr'
         memberName = state.sliceDoc(node.firstChild?.from, node.firstChild?.to)
