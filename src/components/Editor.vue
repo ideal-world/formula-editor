@@ -290,7 +290,7 @@ const filterUsedMaterials = computed(() => {
         </el-row>
       </el-col>
       <el-col class="iw-editor-debug" :span="openDebugPanel ? 8 : 0" v-show="openDebugPanel">
-        <debug-comp v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" :entrance="props.entrance" />
+        <debug-comp v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" v-model:pass="formulaResult.pass" :entrance="props.entrance" />
       </el-col>
     </el-row>
   </div>
