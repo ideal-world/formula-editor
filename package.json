@@ -4,11 +4,12 @@
   "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
-    "docs:dev": "vitepress dev docs --host 0.0.0.0",
-    "docs:build": "vitepress build docs",
+    "docs:dev": "npm run publish-typedoc && vitepress dev docs --host 0.0.0.0",
+    "docs:build": "npm run publish-typedoc && vitepress build docs",
     "docs:serve": "vitepress serve docs",
     "test": "vitest --run",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "publish-typedoc": "typedoc --options typedoc.json"
   },
   "keywords": [
     "formula",
@@ -55,6 +56,9 @@
     "rimraf": "^5.0.1",
     "sass": "^1.63.6",
     "scss": "^0.2.4",
+    "typedoc": "^0.25.1",
+    "typedoc-plugin-markdown": "^4.0.0-next.22",
+    "typedoc-vitepress-theme": "^1.0.0-next.3",
     "typescript": "^5.1.6",
     "unplugin-auto-import": "^0.16.6",
     "unplugin-icons": "^0.17.0",
