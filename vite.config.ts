@@ -33,7 +33,7 @@ export default defineConfig({
             fileName: (format) => `formula-editor.${format}.js`
         },
         rollupOptions: {
-            external: ['vue', 'codemirror', 'element-plus', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/, /@element-plus\/.+/],
+            external: ['vue', 'vue-i18n', 'codemirror', 'element-plus', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/, /@element-plus\/.+/],
             output: {
                 exports: 'named',
                 globals: {
@@ -44,7 +44,7 @@ export default defineConfig({
         emptyOutDir: false
     },
     test: {
-        global: true,
+        globals: true,
         environment: "happy-dom"
     },
 })

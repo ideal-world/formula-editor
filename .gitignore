@@ -4,6 +4,7 @@ dist
 dist-ssr
 *.local
 docs/.vitepress/cache
+docs/.vitepress/.temp
 docs/api
 types
 .idea
