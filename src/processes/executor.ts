@@ -7,7 +7,9 @@ const { t } = i18n.global
  * 
  * @param inputParams input parameters
  * @param formulaValue the formula to be executed
- * @param materials materials used in the formula
+ * @param materials materials used in the formula. 
+ *            You need to ensure that the variables or functions used in the formula are defined, 
+ *            and the variables in materials have corresponding input params values.
  * @param entrance entrance variable of the formula
  * @returns formula execution results
  * 
@@ -22,27 +24,14 @@ const { t } = i18n.global
  *    name: 'field',
  *    label: '字段',
  *    isVar: true,
- *    showLabel: true,
- *    color: '#f8e3c5',
  *    items: [
  *      {
  *        name: 'applicant',
- *        label: '申请人',
- *        kind: VarKind.STRING,
- *        note: '表单申请人姓名',
- *        minLen: 2,
- *        maxLen: 20,
- *        cates: ['基础信息']
+ *        label: '申请人'
  *      },
  *      {
  *        name: 'age',
- *        label: '年龄',
- *        kind: VarKind.NUMBER,
- *        note: '年龄',
- *        minLen: 18,
- *        maxLen: 60,
- *        defaultValue:36,
- *        cates: ['基础信息']
+ *        label: '年龄'
  *      }
  *    ]
  *  },
@@ -50,43 +39,16 @@ const { t } = i18n.global
  *    name: 'fun',
  *    label: '内置',
  *    isVar: false,
- *    showLabel: false,
- *    color: '#d9ecff',
  *    items: [
  *      {
  *        name: 'sum',
  *        label: '求和',
- *        note: `获取一组数值的总和。<br/>用法：<span style='color: #529b2e'>SUM(数字1,数字2,...)</span>`,
- *        input: [
- *          {
- *            kind: VarKind.NUMBER,
- *          },
- *        ],
- *        isVarLen: true,
- *        isAsync: false,
- *        output: {
- *          kind: VarKind.NUMBER,
- *        },
- *        body: `return Array.from(arguments).reduce((a, b) => a + b)`,
- *        cates: ['常用', '计算'],
+ *        body: `return Array.from(arguments).reduce((a, b) => a + b)`
  *      },
  *      {
  *        name: 'concat',
  *        label: '合并文本',
- *        note: `将多个文本合并成一个文本。<br/>用法：<span style='color: #529b2e'>concat(文本1,文本2,...)</span>`,
- *        input: [
- *          {
- *            kind: VarKind.ANY,
- *          },
- *        ],
- *        isVarLen: true,
- *        isAsync: false,
- *        output: {
- *          kind: VarKind.STRING,
- *        },
- *        body: `return Array.from(arguments).join('')`,
- *        cates: ['常用', '文本'],
- *      }
+ *        body: `return Array.from(arguments).join('')`
  *    ]
  *  }]
  * try{
