@@ -245,26 +245,31 @@ const iwEditorLinter = linter((view) => {
     },
   })(view)
 
-  let verifiedNode: [number, number][] = []
-  formulaResult.materials = []
-  syntaxTree(view.state)
-    .topNode.cursor()
-    .iterate((node) => {
-      diagnosticFormula(
-        node.node,
-        view.state,
-        props.targetGuard.kind,
-        diagnostics,
-        props.entrance,
-        verifiedNode,
-        (namespace) => props.materials.find((ns) => ns.name === namespace),
-        (name) => {
-          if (!formulaResult.materials.includes(name)) {
-            formulaResult.materials.push(name)
-          }
-        },
-      )
-    })
+  if (diagnostics.length === 0) {
+    // Only perform formula checking when the syntax check passes to avoid formula checking errors caused by syntax errors
+    // For example: $.fun.upper(()
+    // Errors in syntax tree parsing may accidentally trigger formula parameter number check errors
+    let verifiedNode: [number, number][] = []
+    formulaResult.materials = []
+    syntaxTree(view.state)
+      .topNode.cursor()
+      .iterate((node) => {
+        diagnosticFormula(
+          node.node,
+          view.state,
+          props.targetGuard.kind,
+          diagnostics,
+          props.entrance,
+          verifiedNode,
+          (namespace) => props.materials.find((ns) => ns.name === namespace),
+          (name) => {
+            if (!formulaResult.materials.includes(name)) {
+              formulaResult.materials.push(name)
+            }
+          },
+        )
+      })
+  }
 
   document.querySelectorAll('.iw-cm-wrap__key-word').forEach((element) => {
     element.classList.remove('iw-cm-wrap--error')
