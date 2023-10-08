@@ -3,6 +3,8 @@ import { computed, reactive, ref } from 'vue'
 import { iwExecutor } from '../processes'
 import { Namespace, VarInfo } from '../processes/interface'
 import { VideoPlay } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 interface Props {
   materials: Namespace[]
@@ -45,7 +47,7 @@ async function debug() {
   spanDom.classList.remove('iw-debug__result-span--ok', 'iw-debug__result-span--error')
   if (!props.pass) {
     spanDom.classList.add('iw-debug__result-span--error')
-    debugResult.value = '请先修正公式错误后再运行'
+    debugResult.value = t('debug.formula_error')
     return
   }
   let inputParamsMap = new Map<string, any>()
@@ -68,7 +70,7 @@ async function debug() {
 <template>
   <div class="iw-debug">
     <p class="iw-debug__toolbar">
-      <el-button :icon="VideoPlay" link @click="debug">运行</el-button>
+      <el-button :icon="VideoPlay" link @click="debug">{{ $t('debug.run') }}</el-button>
     </p>
     <template v-for="materialVar in materialVars">
       <el-divider content-position="left">{{ materialVar.nsLabel }}</el-divider>
@@ -79,7 +81,7 @@ async function debug() {
       </template>
     </template>
     <p class="iw-debug__result">
-      结果：<span class="iw-debug__result-span">{{ debugResult }}</span>
+      {{ $t('debug.result') }}:<span class="iw-debug__result-span">{{ debugResult }}</span>
     </p>
   </div>
 </template>

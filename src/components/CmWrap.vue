@@ -12,6 +12,8 @@ import * as eslint from 'eslint-linter-browserify'
 import { esLint, javascript } from '@codemirror/lang-javascript'
 import { iwInterface } from '../processes'
 import { diagnosticFormula } from '../processes/cmEditor'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 export interface FormulaResult {
   value: string
@@ -270,13 +272,12 @@ const iwEditorLinter = linter((view) => {
   diagnostics.forEach((diagnostic) => {
     if (diagnostic.source === 'eslint') {
       if (diagnostic.message.includes('Parsing error: Unterminated string constant')) {
-        diagnostic.message = '未终止的字符串常量'
+        diagnostic.message = t('diagnostic.unterminated_string_constant')
       } else {
-        diagnostic.message = '公式语法错误'
+        diagnostic.message = t('diagnostic.syntax_error')
       }
       delete diagnostic.source
     } else {
-      let view: EditorView = codeEditor.value?.view
       let posCoords = view.coordsAtPos(diagnostic.from)
       if (posCoords) {
         // Process offset caused by border radius
@@ -347,7 +348,7 @@ const cmExtensions: Extension[] = [
 </script>
 
 <template>
-  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap placeholder="在此输入公式" :extensions="cmExtensions" />
+  <code-mirror class="iw-cm-wrap" ref="codeEditor" v-model="formulaResult.value" wrap :placeholder="$t('editor.placeholder')" :extensions="cmExtensions" />
 </template>
 
 <style lang="scss" scoped></style>

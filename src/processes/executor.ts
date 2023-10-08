@@ -1,4 +1,6 @@
 import { FunInfo, Namespace, VarInfo } from './interface'
+import i18n from '../i18n'
+const { t } = i18n.global
 
 /**
  * Formula execution engine
@@ -138,7 +140,7 @@ function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], 
         // The value of the variable comes from the input and cannot be taken from the default value
         let paramValue = inputParams.has(paramName) ? inputParams.get(paramName) : undefined
         if (paramValue === undefined) {
-          throw new Error('参数 [' + varInfo.label + '] 值不存在')
+          throw new Error(t('executor.param_value_not_exist_error', { 'var': varInfo.label }))
         }
         // Add variable name and corresponding value
         $[ns.name][varInfo.name!] = paramValue
@@ -175,7 +177,7 @@ async function doExecute($: any, formulaValue: string): Promise<any> {
     const asyncFn = new asyncFunction('$', `return ` + formulaValue)
     return await asyncFn($)
   } catch (e: any) {
-    throw new Error('公式执行错误: ' + e.message)
+    throw new Error(t('executor.execute_error') + e.message)
   }
 }
 

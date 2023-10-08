@@ -3,6 +3,8 @@ import { iwInterface } from './index'
 import { Diagnostic } from '@codemirror/lint'
 import { Namespace } from './interface'
 import { EditorState } from '@codemirror/state'
+import i18n from '../i18n'
+const { t } = i18n.global
 
 /**
  * Add diagnostic information
@@ -108,7 +110,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
   }
   if (paramKind != null) {
     if (expectedOutputKind !== paramKind && expectedOutputKind !== iwInterface.VarKind.ANY) {
-      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + paramKind + ']', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.format_error', { 'expect': t('data_kind.' + expectedOutputKind), 'real': t('data_kind.' + paramKind) }), currNode.from, currNode.to)
     }
     diagnosedNode.push([currNode.from, currNode.to])
     return
@@ -124,7 +126,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     // ParenthesizedExpression("(",BinaryExpression(BinaryExpression(Number,ArithOp,Number),ArithOp,Number),")")
     let expr = currNode.firstChild?.nextSibling
     if (!expr) {
-      addDiagnostic(diagnostics, '括号格式错误', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.bracket_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
@@ -144,7 +146,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     let op = left?.nextSibling
     let right = op?.nextSibling
     if (!left || !op || !right) {
-      addDiagnostic(diagnostics, '二元表达式格式错误', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.binary_expression_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
@@ -177,7 +179,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     let trueResult = cond?.nextSibling?.nextSibling
     let falseResult = trueResult?.nextSibling?.nextSibling
     if (!cond || !trueResult || !falseResult) {
-      addDiagnostic(diagnostics, '条件表达式格式错误', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.conditional_expression_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
@@ -202,7 +204,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     memberName = state.sliceDoc(currNode.from, currNode.to)
   } else if (currNode.name === 'VariableName') {
     // Custom variables are not supported
-    addDiagnostic(diagnostics, '变量/函数不存在', currNode.from, currNode.to)
+    addDiagnostic(diagnostics, t('diagnostic.var_fun_not_exist_error'), currNode.from, currNode.to)
     diagnosedNode.push([currNode.from, currNode.to])
     return
   } else {
@@ -217,15 +219,15 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
   let name = memberNameSplit[2]
   let ns = findMaterials(namespace)
   if (!ns) {
-    addDiagnostic(diagnostics, (kind === 'var' ? '变量' : '函数') + '命名空间不存在', currNode.from, currNode.to)
+    addDiagnostic(diagnostics, (kind === 'var' ? t('_.var') : t('_.fun')) + t('diagnostic.namespace_not_exist_error'), currNode.from, currNode.to)
     diagnosedNode.push([currNode.from, currNode.to])
     return
   }
 
   if (kind === 'var') {
     let varInfo = (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)
-    if (!varInfo) {
-      addDiagnostic(diagnostics, '变量不存在', currNode.from, currNode.to)
+    if (!ns.isVar || !varInfo) {
+      addDiagnostic(diagnostics, t('diagnostic.var_not_exist_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
@@ -234,19 +236,19 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
         from: currNode.from,
         to: currNode.to,
         severity: 'error',
-        message: '期望格式为[' + expectedOutputKind + '],实际为[' + varInfo.kind + ']',
+        message: t('diagnostic.format_error', { 'expect': t('data_kind.' + expectedOutputKind), 'real': t('data_kind.' + varInfo.kind) }),
         markClass: 'iw-cm-wrap--error',
       })
     }
   } else {
     if (!currNode.firstChild?.nextSibling?.firstChild) {
-      addDiagnostic(diagnostics, '函数格式错误', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.fun_format_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
     let funInfo = (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)
     if (!funInfo) {
-      addDiagnostic(diagnostics, '函数不存在', currNode.from, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.fun_not_exist_error'), currNode.from, currNode.to)
       diagnosedNode.push([currNode.from, currNode.to])
       return
     }
@@ -255,7 +257,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     let paramStartOffset = tempParamNode.nextSibling!.from - 1
     if (funInfo.output.kind !== expectedOutputKind && expectedOutputKind !== iwInterface.VarKind.ANY && funInfo.output.kind !== iwInterface.VarKind.ANY) {
       // Only mark the method body. If it is an asynchronous function, you need to subtract the length of `await`
-      addDiagnostic(diagnostics, '期望格式为[' + expectedOutputKind + '],实际为[' + funInfo.output.kind + ']', currNode.from + (funInfo.isAsync ? -6 : 0), paramStartOffset)
+      addDiagnostic(diagnostics, t('diagnostic.format_error', { 'expect': t('data_kind.' + expectedOutputKind), 'real': t('data_kind.' + funInfo.output.kind) }), currNode.from + (funInfo.isAsync ? -6 : 0), paramStartOffset)
     }
 
     // Function parameter checking
@@ -269,7 +271,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
       }
       if (funInfo.input.length <= paramIdx) {
         // Only mark parameters that are too long
-        addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[' + (paramIdx + 1) + ']', tempParamNode.from, currNode.to - 1)
+        addDiagnostic(diagnostics, t('diagnostic.param_length_error', { 'expect': funInfo.input.length, 'real': (paramIdx + 1) }), tempParamNode.from, currNode.to - 1)
         break
       }
       let tempInputKind = funInfo.input[paramIdx].kind
@@ -285,11 +287,11 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
     }
     if (paramIdx === 0 && funInfo.input.length !== 0 && !funInfo.isVarLen) {
       // Only mark () 
-      addDiagnostic(diagnostics, '期望参数长度为[' + funInfo.input.length + '],实际为[0]', paramStartOffset, currNode.to)
+      addDiagnostic(diagnostics, t('diagnostic.param_length_error', { 'expect': funInfo.input.length, 'real': 0 }), paramStartOffset, currNode.to)
     }
     if (realParamLen === 0 && funInfo.isVarLen) {
       // Only mark functions
-      addDiagnostic(diagnostics, '缺少参数', currNode.from, paramStartOffset)
+      addDiagnostic(diagnostics, t('diagnostic.param_not_exist_error'), currNode.from, paramStartOffset)
     }
   }
   // Process hit

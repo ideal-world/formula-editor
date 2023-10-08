@@ -7,6 +7,8 @@ import DebugComp from './Debug.vue'
 import { EditorProps, FunInfo, Namespace, VarInfo } from '../processes/interface'
 import { groupBy } from '../utils/basic'
 import { DEFAULT_FUN_LIB } from '../processes/funcLib'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
 
@@ -216,7 +218,7 @@ const filterUsedMaterials = computed(() => {
         <el-row class="iw-editor-toolbar">
           <el-col :span="12">{{ props.targetVar.label }}</el-col>
           <el-col :span="12" class="iw-editor-toolbar__opt">
-            <el-button :icon="VideoPlay" link @click="openDebugPanel = !openDebugPanel">调试</el-button>
+            <el-button :icon="VideoPlay" link @click="openDebugPanel = !openDebugPanel">{{ $t('editor.debug') }}</el-button>
           </el-col>
         </el-row>
         <el-row class="iw-editor-formula">
@@ -232,11 +234,11 @@ const filterUsedMaterials = computed(() => {
         </el-row>
         <el-row class="iw-editor-material">
           <el-col class="iw-editor-material__var-wrapper" :span="6">
-            <el-input placeholder="搜索变量" v-model="searchMaterialVarKey" :prefix-icon="Search" @input="searchMaterials(true, searchMaterialVarKey)" />
+            <el-input :placeholder="$t('editor.search_var')" v-model="searchMaterialVarKey" :prefix-icon="Search" @input="searchMaterials(true, searchMaterialVarKey)" />
             <el-tabs tab-position="bottom">
               <template v-for="materialVar in materialVars">
                 <el-tab-pane :label="materialVar.nsLabel">
-                  <el-tree :data="materialVar.items" node-key="id" accordion empty-text="暂无数据">
+                  <el-tree :data="materialVar.items" node-key="id" accordion :empty-text="$t('editor.empty')">
                     <template #default="{ node, data }">
                       <div class="iw-editor-material__item" @click="insertMaterial(node.isLeaf, materialVar.nsName, data.name)">
                         <p class="iw-editor-material__item-tile">{{ data.name }}</p>
@@ -251,11 +253,11 @@ const filterUsedMaterials = computed(() => {
           <el-col class="iw-editor-material__func-wrapper" :span="18">
             <el-row>
               <el-col class="iw-editor-material__func-list" :span="10">
-                <el-input placeholder="搜索函数/API" v-model="searchMaterialFunKey" :prefix-icon="Search" @input="searchMaterials(false, searchMaterialFunKey)" />
+                <el-input :placeholder="$t('editor.search_fun')" v-model="searchMaterialFunKey" :prefix-icon="Search" @input="searchMaterials(false, searchMaterialFunKey)" />
                 <el-tabs tab-position="bottom">
                   <template v-for="materialFun in materialFuns">
                     <el-tab-pane :label="materialFun.nsLabel">
-                      <el-tree :data="materialFun.items" node-key="id" accordion empty-text="暂无数据">
+                      <el-tree :data="materialFun.items" node-key="id" accordion :empty-text="$t('editor.empty')">
                         <template #default="{ node, data }">
                           <div
                             class="iw-editor-material__item"
@@ -276,13 +278,11 @@ const filterUsedMaterials = computed(() => {
                 <span v-html="materialNote" v-show="materialNote !== ''" />
                 <div class="iw-editor-material__func-note-tooltip" v-show="materialNote === ''">
                   <ChatLineRound style="width: 2em; height: 2em" />
-                  <span>小提示</span>
-                  <span>指向右侧函数时可在此处显示使用说明</span>
-                  <span>点击右侧函数可将其插入公式编辑器光标所在位置</span>
-                  <span>公式编辑器中输入任何字符会显示可用变量/函数列表</span>
-                  <span
-                    >公式编辑器中输入 <b>{{ props.entrance }}</b> 会显示分类可用列表</span
-                  >
+                  <span>{{ $t('editor.tips') }}</span>
+                  <span>{{ $t('editor.tip1') }}</span>
+                  <span>{{ $t('editor.tip2') }}</span>
+                  <span>{{ $t('editor.tip3') }}</span>
+                  <span v-html="$t('editor.tip4', { entrance: props.entrance })" />
                 </div>
               </el-col>
             </el-row>

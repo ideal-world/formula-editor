@@ -41,7 +41,8 @@
     "@lezer/common": "^1.1.0",
     "codemirror": "^6.0.1",
     "eslint-linter-browserify": "^8.49.0",
-    "vue-codemirror6": "^1.1.27"
+    "vue-codemirror6": "^1.1.27",
+    "vue-i18n": "^9.5.0"
   },
   "peerDependencies": {
     "@element-plus/icons-vue": "^2.1.0",

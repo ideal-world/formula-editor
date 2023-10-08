@@ -1,15 +1,15 @@
 <template>
-  <div style="margin: 8px; color: red">Result：checkPass:{{checkPass}} formulaValue:{{ formulaValue }}</div>
+  <div style="margin: 8px; color: red">Result：checkPass:{{ checkPass }} formulaValue:{{ formulaValue }}</div>
 
   <el-button @click="dialogVisible = true">打开</el-button>
   <el-dialog v-model="dialogVisible">
-    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :targetVar="targetVar" :materials="materials"/>
+    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :targetVar="targetVar" :materials="materials" />
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
-import {iwInterface} from '../src';
+import { ref } from 'vue'
+import { iwInterface } from '../src'
 
 const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
 const checkPass = ref<boolean>(true)
@@ -17,139 +17,139 @@ const dialogVisible = ref<boolean>(false)
 
 const targetVar: iwInterface.VarInfo = {
   name: 'formName',
-  label: '表单标题',
+  label: 'form title',
   kind: iwInterface.VarKind.STRING,
-  note: '表单的显示名称',
+  note: 'Display name of the form',
   minLen: 2,
-  maxLen: 20
+  maxLen: 20,
 }
 
-const materials : iwInterface.Namespace[] = [
-{
+const materials: iwInterface.Namespace[] = [
+  {
     name: 'field',
-    label: '字段',
+    label: 'FIELD',
     isVar: true,
     showLabel: true,
     color: '#f8e3c5',
     items: [
-        {
-            name: 'applicant',
-            label: '申请人',
-            kind: iwInterface.VarKind.STRING,
-            note: '表单申请人姓名',
-            minLen: 2,
-            maxLen: 20,
-            cates: ['基础信息']
-        },
-        {
-            name: 'kind',
-            label: '申请类型',
-            kind: iwInterface.VarKind.STRING,
-            note: '申请类型',
-            minLen: 2,
-            maxLen: 20,
-            cates: ['基础信息']
-        },
-        {
-            name: 'age',
-            label: '年龄',
-            kind: iwInterface.VarKind.NUMBER,
-            note: '年龄',
-            minLen: 18,
-            maxLen: 60,
-            defaultValue:36,
-            cates: ['基础信息']
-        }
-    ]
-},
-{
+      {
+        name: 'applicant',
+        label: 'Applicant',
+        kind: iwInterface.VarKind.STRING,
+        note: 'Form Applicant Name',
+        minLen: 2,
+        maxLen: 20,
+        cates: ['Basic'],
+      },
+      {
+        name: 'kind',
+        label: 'Application type',
+        kind: iwInterface.VarKind.STRING,
+        note: 'Application type',
+        minLen: 2,
+        maxLen: 20,
+        cates: ['Basic'],
+      },
+      {
+        name: 'age',
+        label: 'age',
+        kind: iwInterface.VarKind.NUMBER,
+        note: 'age',
+        minLen: 18,
+        maxLen: 60,
+        defaultValue: 36,
+        cates: ['Basic'],
+      },
+    ],
+  },
+  {
     name: 'model',
-    label: '模型',
+    label: 'MODEL',
     isVar: true,
     showLabel: true,
     color: '#e1f3d8',
     items: [
-        {
-            name: 'accountName',
-            label: '账号',
-            kind: iwInterface.VarKind.STRING,
-            note: '账号名',
-            minLen: 2,
-            maxLen: 20,
-            cates: ['账户']
-        },
-        {
-            name: 'phone',
-            label: '手机号',
-            kind: iwInterface.VarKind.STRING,
-            cates: ['账户']
-        },
-        {
-            name: 'roleName',
-            label: '角色名',
-            kind: iwInterface.VarKind.STRING,
-            cates: ['角色']
-        },
-        {
-            name: 'isAdmin',
-            label: '是否是管理员',
-            kind: iwInterface.VarKind.BOOLEAN,
-            cates: ['角色']
-        }
-    ]
-},
-{
+      {
+        name: 'accountName',
+        label: 'Account Name',
+        kind: iwInterface.VarKind.STRING,
+        note: 'Account Name',
+        minLen: 2,
+        maxLen: 20,
+        cates: ['ACCOUNT'],
+      },
+      {
+        name: 'phone',
+        label: 'Phone Number',
+        kind: iwInterface.VarKind.STRING,
+        cates: ['ACCOUNT'],
+      },
+      {
+        name: 'roleName',
+        label: 'Role Name',
+        kind: iwInterface.VarKind.STRING,
+        cates: ['ROLE'],
+      },
+      {
+        name: 'isAdmin',
+        label: 'Is it an administrator',
+        kind: iwInterface.VarKind.BOOLEAN,
+        cates: ['ROLE'],
+      },
+    ],
+  },
+  {
     name: 'fun',
-    label: '函数',
+    label: 'Function',
     isVar: false,
     showLabel: false,
     color: '#d9ecff',
     items: [
-        {
-            name: 'now',
-            label: '当前时间(自定义)',
-            note: `返回当前时间戳`,
-            input: [],
-            isVarLen: false,
-            isAsync: false,
-            output: {
-                kind: iwInterface.VarKind.NUMBER
-            },
-            body: `return Date.now()`,
-            cates: ['常用', '日期处理']
-        }
-    ]
-},
-{
+      {
+        name: 'now',
+        label: 'Current time (custom)',
+        note: `return current timestamp`,
+        input: [],
+        isVarLen: false,
+        isAsync: false,
+        output: {
+          kind: iwInterface.VarKind.NUMBER,
+        },
+        body: `return Date.now()`,
+        cates: ['COMMON', 'TIME'],
+      },
+    ],
+  },
+  {
     name: 'api',
     label: 'API',
     isVar: false,
     showLabel: true,
     color: '#d9ec00',
     items: [
-        {
-            name: 'getUserInfo',
-            label: '获取用户信息',
-            note: `根据用户Id获取用户信息`,
-            input: [
-                {
-                    label: '用户Id',
-                    kind: iwInterface.VarKind.STRING
-                }
-            ],
-            isVarLen: false,
-            isAsync: true,
-            output: {
-                kind: iwInterface.VarKind.ANY
-            },
-            body: `return {
+      {
+        name: 'getUserInfo',
+        label: 'Get user information',
+        note: `Get user information based on user ID`,
+        input: [
+          {
+            label: 'User ID',
+            kind: iwInterface.VarKind.STRING,
+          },
+        ],
+        isVarLen: false,
+        isAsync: true,
+        output: {
+          kind: iwInterface.VarKind.ANY,
+        },
+        body: `return {
         userId: arguments[0],
-        userName: '张三',
+        userName: 'nestor',
         age: 18
     }`,
-            cates: ['用户']
-        }
-    ]
-}
+        cates: ['USER'],
+      },
+    ],
+  },
 ]
 </script>

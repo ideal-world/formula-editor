@@ -1,8 +1,9 @@
 import { App, defineCustomElement } from 'vue'
+import i18n from './i18n'
 import { IwEditor } from './components'
 
 export default (app: App): void => {
-  app.component('IwEditor', IwEditor)
+  app.use(i18n).component('IwEditor', IwEditor)
 }
 
 // @ts-ignore

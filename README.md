@@ -1,5 +1,3 @@
-> Preview version, will not guarantee the stability of the API! Do NOT use in production environment!
-
 # Formula Editor
 
 [![NPM](https://img.shields.io/npm/v/%40idealworld%2Fformula-editor)](https://www.npmjs.com/package/@idealworld/formula-editor)
@@ -9,16 +7,34 @@
 
 **A relatively complete formula editor.**
 
-Error diagnosis
+## Features
+
+- Visual design
+- Relatively comprehensive error prompts
+- Auto-completion prompts
+- Customizable variables and synchronous/asynchronous functions
+- Online debugging
+- Dynamic formula execution engine
+
+## Screenshots
+
+**Error diagnosis**
 
 ![demo-diagnostic.png](demo-diagnostic.png)
 
-Online debugging
+**Online debugging**
 
 ![demo-debug.png](demo-debug.png)
 
-asynchronous call
+**Asynchronous call**
 
 ![demo-async.png](demo-async.png)
 
-### https://ideal-world.github.io/formula-editor/
+**I18n**
+
+![demo-i18n.png](demo-i18n.png)
+
+
+## Documentation and examples
+
+[https://ideal-world.github.io/formula-editor/](https://ideal-world.github.io/formula-editor/)

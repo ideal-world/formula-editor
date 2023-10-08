@@ -4,14 +4,14 @@
  * Used to specify the type of a variable, function parameter, or function return value
  */
 export enum VarKind {
-  STRING = '字符串',
-  NUMBER = '数值',
-  BOOLEAN = '布尔',
-  NULL = '空',
-  STRINGS = '字符串数组',
-  NUMBERS = '数值数组',
-  BOOLEANS = '布尔数组',
-  ANY = '任意类型'
+  STRING = 'STRING',
+  NUMBER = 'NUMBER',
+  BOOLEAN = 'BOOLEAN',
+  NULL = 'NULL',
+  STRINGS = 'STRINGS',
+  NUMBERS = 'NUMBERS',
+  BOOLEANS = 'BOOLEANS',
+  ANY = 'ANY'
 }
 
 /**
