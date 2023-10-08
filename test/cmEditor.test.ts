@@ -76,35 +76,35 @@ describe('cmEditor verify', () => {
   })
 
   it('unknown variable/function', () => {
-    assert.deepEqual(verify(`hi`, [], VarKind.STRING)[0], expects(['变量/函数不存在', 0, 2]))
-    assert.deepEqual(verify(`hi()`, [], VarKind.STRING)[0], expects(['变量/函数不存在', 0, 2]))
-    assert.deepEqual(verify(`$.field.hi`, [], VarKind.STRING)[0], expects(['变量命名空间不存在', 0, 10]))
-    assert.deepEqual(verify(`$.fun.hi()`, [], VarKind.STRING)[0], expects(['函数命名空间不存在', 0, 10]))
-    assert.deepEqual(verify(`$.field.hi`, testMaterialVars, VarKind.STRING)[0], expects(['变量不存在', 0, 10]))
-    assert.deepEqual(verify(`$.fun.hi()`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(['函数不存在', 0, 10]))
+    assert.deepEqual(verify(`hi`, [], VarKind.STRING)[0], expects(['Variable/function does not exist', 0, 2]))
+    assert.deepEqual(verify(`hi()`, [], VarKind.STRING)[0], expects(['Variable/function does not exist', 0, 2]))
+    assert.deepEqual(verify(`$.field.hi`, [], VarKind.STRING)[0], expects(['Namespace does not exist', 0, 10]))
+    assert.deepEqual(verify(`$.fun.hi()`, [], VarKind.STRING)[0], expects(['Namespace does not exist', 0, 10]))
+    assert.deepEqual(verify(`$.field.hi`, testMaterialVars, VarKind.STRING)[0], expects(['Variable does not exist', 0, 10]))
+    assert.deepEqual(verify(`$.fun.hi()`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(['Function does not exist', 0, 10]))
   })
 
   it('return data type', () => {
-    assert.deepEqual(verify('1', [], VarKind.STRING)[0], expects(['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 1]))
-    assert.deepEqual(verify('true', [], VarKind.STRING)[0], expects(['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.BOOLEAN + ']', 0, 4]))
-    assert.deepEqual(verify(`'hi'`, [], VarKind.NUMBER)[0], expects(['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 0, 4]))
+    assert.deepEqual(verify('1', [], VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 0, 1]))
+    assert.deepEqual(verify('true', [], VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [boolean]', 0, 4]))
+    assert.deepEqual(verify(`'hi'`, [], VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 0, 4]))
     assert.deepEqual(verify(`'hi'+'hi'`, [], VarKind.NUMBER)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 0, 4], ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 5, 9]))
-    assert.deepEqual(verify(`$.field.age`, testMaterialVars, VarKind.STRING)[0], expects(['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 11]))
-    assert.deepEqual(verify(`$.fun.sum(1,2)`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 9]))
+      ['The expected format is [numeric], the actual format is [string]', 0, 4], ['The expected format is [numeric], the actual format is [string]', 5, 9]))
+    assert.deepEqual(verify(`$.field.age`, testMaterialVars, VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 0, 11]))
+    assert.deepEqual(verify(`$.fun.sum(1,2)`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 0, 9]))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.lower('1'))`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 9], ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 12, 23]))
+      ['The expected format is [string], the actual format is [numeric]', 0, 9], ['The expected format is [numeric], the actual format is [string]', 12, 23]))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.fun.lower('1')))`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 9], ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 22, 33]))
+      ['The expected format is [string], the actual format is [numeric]', 0, 9], ['The expected format is [numeric], the actual format is [string]', 22, 33]))
     assert.deepEqual(verify(`$.fun.sum($.field.age,$.fun.sum($.fun.lower('1')))+$.field.age`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 9],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 32, 43],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 51, 62],
+      ['The expected format is [string], the actual format is [numeric]', 0, 9],
+      ['The expected format is [numeric], the actual format is [string]', 32, 43],
+      ['The expected format is [string], the actual format is [numeric]', 51, 62],
     ))
     assert.deepEqual(verify(`$.field.age+$.fun.sum($.field.age,$.fun.sum($.fun.lower('1')))`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 0, 11],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 12, 21],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 44, 55]),
+      ['The expected format is [string], the actual format is [numeric]', 0, 11],
+      ['The expected format is [string], the actual format is [numeric]', 12, 21],
+      ['The expected format is [numeric], the actual format is [string]', 44, 55]),
     )
     assert.deepEqual(verify(`1`, miniMaterials, VarKind.NUMBER)[0], [])
     assert.deepEqual(verify(`true`, miniMaterials, VarKind.BOOLEAN)[0], [])
@@ -124,22 +124,22 @@ describe('cmEditor verify', () => {
   })
 
   it('parameter', () => {
-    assert.deepEqual(verify(`$.fun.sum(1,'2')`, miniMaterials, VarKind.NUMBER)[0], expects(['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 12, 15]))
-    assert.deepEqual(verify(`$.fun.lower('2','2')`, miniMaterials, VarKind.STRING)[0], expects(['期望参数长度为[1],实际为[2]', 16, 19]))
-    assert.deepEqual(verify(`$.fun.lower(2)`, miniMaterials, VarKind.STRING)[0], expects(['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 12, 13]))
-    assert.deepEqual(verify(`$.fun.lower()`, miniMaterials, VarKind.STRING)[0], expects(['期望参数长度为[1],实际为[0]', 11, 13]))
-    assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2'))`, miniMaterials, VarKind.NUMBER)[0], expects(['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 34, 37]))
-    assert.deepEqual(verify(`1+$.fun.sum(1,$.fun.sum($.field.age,'2'))`, miniMaterials, VarKind.NUMBER)[0], expects(['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 36, 39]))
-    assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2'))+1`, miniMaterials, VarKind.NUMBER)[0], expects(['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 34, 37]))
+    assert.deepEqual(verify(`$.fun.sum(1,'2')`, miniMaterials, VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 12, 15]))
+    assert.deepEqual(verify(`$.fun.lower('2','2')`, miniMaterials, VarKind.STRING)[0], expects(['The expected parameter length is [1], the actual length is [2]', 16, 19]))
+    assert.deepEqual(verify(`$.fun.lower(2)`, miniMaterials, VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 12, 13]))
+    assert.deepEqual(verify(`$.fun.lower()`, miniMaterials, VarKind.STRING)[0], expects(['The expected parameter length is [1], the actual length is [0]', 11, 13]))
+    assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2'))`, miniMaterials, VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 34, 37]))
+    assert.deepEqual(verify(`1+$.fun.sum(1,$.fun.sum($.field.age,'2'))`, miniMaterials, VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 36, 39]))
+    assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2'))+1`, miniMaterials, VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 34, 37]))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2',$.fun.lower(2)))+1`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 34, 37],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 38, 49],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 50, 51],
+      ['The expected format is [numeric], the actual format is [string]', 34, 37],
+      ['The expected format is [numeric], the actual format is [string]', 38, 49],
+      ['The expected format is [string], the actual format is [numeric]', 50, 51],
     ))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.field.age,'2',$.fun.lower($.fun.lower())))+1`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 34, 37],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 38, 49],
-      ['期望参数长度为[1],实际为[0]', 61, 63],
+      ['The expected format is [numeric], the actual format is [string]', 34, 37],
+      ['The expected format is [numeric], the actual format is [string]', 38, 49],
+      ['The expected parameter length is [1], the actual length is [0]', 61, 63],
     ))
     assert.deepEqual(verify(`$.fun.concat(1,'2')`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], [])
     assert.deepEqual(verify(`$.fun.concat($.fun.sum(12))`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], [])
@@ -149,23 +149,23 @@ describe('cmEditor verify', () => {
 
   it('expression', () => {
     assert.deepEqual(verify(`$.fun.sum(1,2)>0?'':''`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 17, 19], ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 20, 22]))
+      ['The expected format is [numeric], the actual format is [string]', 17, 19], ['The expected format is [numeric], the actual format is [string]', 20, 22]))
     assert.deepEqual(verify(`$.fun.sum($.fun.sum(1,2)>0?'':'',2)>0?'':''`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 27, 29],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 30, 32],
+      ['The expected format is [numeric], the actual format is [string]', 27, 29],
+      ['The expected format is [numeric], the actual format is [string]', 30, 32],
     ))
     assert.deepEqual(verify(`false?1:$.field.age>'3'?(1?'222':333):'22'`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 6, 7],
-      ['期望格式为[' + VarKind.BOOLEAN + '],实际为[' + VarKind.NUMBER + ']', 25, 26],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 33, 36],
+      ['The expected format is [string], the actual format is [numeric]', 6, 7],
+      ['The expected format is [boolean], the actual format is [numeric]', 25, 26],
+      ['The expected format is [string], the actual format is [numeric]', 33, 36],
     ))
     assert.deepEqual(verify(`false?'1':$.field.age>3?($.fun.sum(1,'2')>0?'222':'333'):'22'`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 37, 40]))
+      ['The expected format is [numeric], the actual format is [string]', 37, 40]))
     assert.deepEqual(verify(`false?'1':$.field.age>3?($.fun.sum(1,2)?'222':'333'):'22'`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.BOOLEAN + '],实际为[' + VarKind.NUMBER + ']', 25, 34]))
+      ['The expected format is [boolean], the actual format is [numeric]', 25, 34]))
 
     assert.deepEqual(verify(`'1'&&'2'`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 0, 3], ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 5, 8]))
+      ['The expected format is [numeric], the actual format is [string]', 0, 3], ['The expected format is [numeric], the actual format is [string]', 5, 8]))
 
     assert.deepEqual(verify(`'1'&&'2'`, miniMaterials, VarKind.STRING)[0], [])
     assert.deepEqual(verify(`(1+0)>2?'222':'343'`, miniMaterials, VarKind.STRING)[0], [])
@@ -177,18 +177,18 @@ describe('cmEditor verify', () => {
 
   it('complex', () => {
     assert.deepEqual(verify(`$.fun.sum(($.fun.sum(1,$.fun.sum($.field.age,'2',$.fun.lower($.fun.lower(2,2))))+1)>0?'':'',2)>0?'':''`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 45, 48],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 49, 60],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 73, 74],
-      ['期望格式为[' + VarKind.STRING + '],实际为[' + VarKind.NUMBER + ']', 75, 76],
-      ['期望参数长度为[1],实际为[2]', 75, 76],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 86, 88],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 89, 91],
+      ['The expected format is [numeric], the actual format is [string]', 45, 48],
+      ['The expected format is [numeric], the actual format is [string]', 49, 60],
+      ['The expected format is [string], the actual format is [numeric]', 73, 74],
+      ['The expected format is [string], the actual format is [numeric]', 75, 76],
+      ['The expected parameter length is [1], the actual length is [2]', 75, 76],
+      ['The expected format is [numeric], the actual format is [string]', 86, 88],
+      ['The expected format is [numeric], the actual format is [string]', 89, 91],
     ))
     assert.deepEqual(verify(`$.fun.sum(($.fun.sum(1,$.fun.sum($.field.age,'2',$.fun.lower($.fun.lower('hi'))==='hi'?0:1))+1)>0?'':'',2)>0?'':(await $.fun.httpGet('xxx')).code`, miniMaterials, VarKind.STRING)[0], expects(
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 45, 48],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 98, 100],
-      ['期望格式为[' + VarKind.NUMBER + '],实际为[' + VarKind.STRING + ']', 101, 103],
+      ['The expected format is [numeric], the actual format is [string]', 45, 48],
+      ['The expected format is [numeric], the actual format is [string]', 98, 100],
+      ['The expected format is [numeric], the actual format is [string]', 101, 103],
     ))
     assert.deepEqual(verify(`$.fun.sum(($.fun.sum(1,$.fun.sum($.field.age,2,$.fun.lower($.fun.lower('hi'))==='hi'?0:1))+1)>0?11:222,2)>0?'':(await $.fun.httpGet('xxx')).code`, miniMaterials, VarKind.STRING)[0], [])
   })

@@ -23,7 +23,7 @@ describe('executor execute()', async () => {
         try {
             await execute(new Map(), '$.field.age', [], '$')
         } catch (e) {
-            assert.equal(e.message, `公式执行错误: Cannot read properties of undefined (reading 'age')`)
+            assert.equal(e.message, `Formula execution error:Cannot read properties of undefined (reading 'age')`)
         }
     })
 
@@ -31,7 +31,7 @@ describe('executor execute()', async () => {
         try {
             await execute(new Map(), '$.field.age', testMaterialVars, '$')
         } catch (e) {
-            assert.equal(e.message, `参数 [年龄] 值不存在`)
+            assert.equal(e.message, `Parameter [年龄] value does not exist`)
         }
     })
 

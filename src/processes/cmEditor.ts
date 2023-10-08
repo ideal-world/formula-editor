@@ -219,7 +219,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
   let name = memberNameSplit[2]
   let ns = findMaterials(namespace)
   if (!ns) {
-    addDiagnostic(diagnostics, (kind === 'var' ? t('_.var') : t('_.fun')) + t('diagnostic.namespace_not_exist_error'), currNode.from, currNode.to)
+    addDiagnostic(diagnostics, t('diagnostic.namespace_not_exist_error'), currNode.from, currNode.to)
     diagnosedNode.push([currNode.from, currNode.to])
     return
   }
