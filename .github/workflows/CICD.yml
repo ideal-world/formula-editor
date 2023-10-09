@@ -31,8 +31,10 @@ jobs:
         run: npm ci
 
       - name: Test
-        run: |
-          npm run test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
           
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v2
@@ -61,8 +63,7 @@ jobs:
         run: npm ci
 
       - name: Test
-        run: |
-          npm run test
+        run: npm run test
 
       - name: Build with VitePress
         run: |

@@ -76,8 +76,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import FormulaEditor from 'formula-editor'
-import 'formula-editor/dist/style.css'
+import FormulaEditor from ''@idealworld/formula-editor'
+import ''@idealworld/formula-editor/dist/style.css'
 
 createApp(App).use(ElementPlus).use(FormulaEditor).mount('#app')
 ```
@@ -87,7 +87,7 @@ Import components from this library in your own component:
 ```html
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { iwInterface } from 'formula-editor'
+  import { iwInterface } from ''@idealworld/formula-editor'
 
   const checkPass = ref<boolean>(true)
   const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
