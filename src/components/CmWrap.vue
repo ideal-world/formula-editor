@@ -116,7 +116,7 @@ const iwEditorKeywordsPlugin = ViewPlugin.fromClass(
 )
 
 // --------------------------------------
-// Automatic material processing
+// Autocompletion material processing
 // --------------------------------------
 
 function completions(context: CompletionContext): CompletionResult | null {

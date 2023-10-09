@@ -27,7 +27,7 @@ function addDiagnostic(diagnostics: Diagnostic[], message: string, from: number,
 /**
  * Diagnose errors in formulas
  *
- * @param currNode current node error
+ * @param currNode current node
  * @param state formula state
  * @param expectedOutputKind expected output type
  * @param diagnostics diagnostic collection
@@ -197,7 +197,7 @@ export function diagnosticFormula(currNode: SyntaxNode, state: EditorState, expe
   let kind = null
   let memberName: string
   if (currNode.name === 'CallExpression' && currNode.firstChild?.name === 'MemberExpression' && currNode.firstChild?.firstChild?.name === 'MemberExpression' && currNode.firstChild?.nextSibling?.name === 'ArgList') {
-    kind = 'expr'
+    kind = 'fun'
     memberName = state.sliceDoc(currNode.firstChild?.from, currNode.firstChild?.to)
   } else if (currNode.name === 'MemberExpression' && currNode.firstChild?.name === 'MemberExpression') {
     kind = 'var'
