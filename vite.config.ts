@@ -29,7 +29,7 @@ export default defineConfig({
         lib: {
             entry: path.resolve(__dirname, 'src/index.ts'),
             name: 'formula-editor',
-            formats: ['es'],
+            formats: ['es','umd'],
             fileName: (format) => `formula-editor.${format}.js`
         },
         rollupOptions: {

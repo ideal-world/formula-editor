@@ -1,6 +1,6 @@
 {
   "name": "@idealworld/formula-editor",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
@@ -25,7 +25,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/formula-editor.es.js"
+      "import": "./dist/formula-editor.es.js",
+      "require": "./dist/formula-editor.umd.js"
     },
     "./dist/style.css": "./dist/style.css"
   },
@@ -70,7 +71,6 @@
     "vue-tsc": "^1.8.13"
   },
   "files": [
-    "src",
     "dist"
   ],
   "repository": {

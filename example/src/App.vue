@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { iwInterface } from 'formula-editor'
+import { iwInterface } from '@idealworld/formula-editor'
 
 const checkPass = ref<boolean>(true)
 const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
