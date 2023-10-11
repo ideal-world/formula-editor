@@ -1,6 +1,6 @@
 {
   "name": "@idealworld/formula-editor",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
@@ -32,6 +32,7 @@
   },
   "type": "module",
   "module": "./dist/formula-editor.es.js",
+  "types": "./dist/types/index.d.ts",
   "dependencies": {
     "@codemirror/autocomplete": "^6.9.1",
     "@codemirror/commands": "^6.2.5",
