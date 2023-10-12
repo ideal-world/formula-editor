@@ -4,6 +4,7 @@ import { computed, reactive, ref } from 'vue'
 import { ChatLineRound, Search, VideoPlay } from '@element-plus/icons-vue'
 import CmWrapComp, { FormulaResult } from './CmWrap.vue'
 import DebugComp from './Debug.vue'
+import { iwInterface } from '../processes'
 import { EditorProps, FunInfo, Namespace, VarInfo } from '../processes/interface'
 import { groupBy } from '../utils/basic'
 import { DEFAULT_FUN_LIB } from '../processes/funcLib'
@@ -31,6 +32,10 @@ interface Material {
   nsLabel: string
   nsName: string
   items: MaterialItemTree[]
+}
+
+interface LabelNameConf {
+  [key: string]: string
 }
 
 if (props.addDefaultFunLib) {
@@ -184,6 +189,28 @@ function watchFormulaResult(_formulaResult: FormulaResult) {
   emit('update:checkPass', _formulaResult.pass)
 }
 
+function getFormuleWithLabel() {
+  const reg = new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g')
+  let _value = formulaResult.value
+  let labelNameConf: LabelNameConf = {}
+  _value.match(reg)?.forEach(item => {
+    let namespace = item.split('.')[1]
+    let name = item.split('.')[2]
+    let ns = props.materials.find((ns) => ns.name === namespace)
+    let label = name
+    if (ns?.showLabel) {
+      label = ns?.isVar
+        ? (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name
+        : (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
+      labelNameConf[`${item}`] = label
+    }
+  })
+  Object.keys(labelNameConf).forEach(key => {
+    _value = _value.replaceAll(key, labelNameConf[key])
+  })
+  return _value
+}
+
 const filterUsedMaterials = computed(() => {
   let formulaMaterials = formulaResult.materials
   return props.materials
@@ -208,6 +235,10 @@ const filterUsedMaterials = computed(() => {
       } as Namespace
     })
     .filter((ns) => ns.items.length > 0)
+})
+
+defineExpose({
+  getFormuleWithLabel
 })
 </script>
 
