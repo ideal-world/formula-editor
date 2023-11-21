@@ -190,7 +190,7 @@ function watchFormulaResult(_formulaResult: FormulaResult) {
   emit('update:checkPass', _formulaResult.pass)
 }
 
-function getFormuleWithLabel() {
+function getFormulaWithLabel() {
   const reg = new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g')
   let _value = formulaResult.value
   let labelNameConf: LabelNameConf = {}
@@ -244,7 +244,7 @@ async function getResultVal() {
 }
 
 defineExpose({
-  getFormuleWithLabel,
+  getFormulaWithLabel,
   getResultVal
 })
 </script>
