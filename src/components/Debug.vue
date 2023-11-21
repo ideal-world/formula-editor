@@ -65,6 +65,13 @@ async function debug() {
     debugResult.value = e.message
   }
 }
+async function getDebugResultVal() {
+  await debug()
+  return debugResult.value
+}
+defineExpose({
+  getDebugResultVal
+})
 </script>
 
 <template>

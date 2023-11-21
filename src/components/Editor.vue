@@ -55,6 +55,7 @@ if (props.addDefaultFunLib) {
 }
 
 const CmWrapCompRef = ref()
+const DebugCompRef = ref()
 const materialNote = ref<String>('')
 const materialVars = reactive<Material[]>(findMaterials(true, ''))
 const materialFuns = reactive<Material[]>(findMaterials(false, ''))
@@ -198,12 +199,12 @@ function getFormuleWithLabel() {
     let name = item.split('.')[2]
     let ns = props.materials.find((ns) => ns.name === namespace)
     let label = name
-    if (ns?.showLabel) {
+    if (ns) {
       label = ns?.isVar
-        ? (ns.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name
-        : (ns.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
-      labelNameConf[`${item}`] = label
+        ? (ns?.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name
+        : (ns?.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
     }
+    labelNameConf[`${item}`] = label
   })
   Object.keys(labelNameConf).forEach(key => {
     _value = _value.replaceAll(key, labelNameConf[key])
@@ -237,8 +238,14 @@ const filterUsedMaterials = computed(() => {
     .filter((ns) => ns.items.length > 0)
 })
 
+async function getResultVal() {
+  const val = await DebugCompRef.value.getDebugResultVal()
+  return val
+}
+
 defineExpose({
-  getFormuleWithLabel
+  getFormuleWithLabel,
+  getResultVal
 })
 </script>
 
@@ -321,7 +328,7 @@ defineExpose({
         </el-row>
       </el-col>
       <el-col class="iw-editor-debug" :span="openDebugPanel ? 8 : 0" v-show="openDebugPanel">
-        <debug-comp v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" v-model:pass="formulaResult.pass" :entrance="props.entrance" />
+        <debug-comp ref="DebugCompRef" v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" v-model:pass="formulaResult.pass" :entrance="props.entrance" />
       </el-col>
     </el-row>
   </div>
