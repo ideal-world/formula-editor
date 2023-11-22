@@ -132,7 +132,7 @@ function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], 
  * @param formulaValue formula value
  * @returns execution results
  */
-async function doExecute($: any, formulaValue: string): Promise<any> {
+export async function doExecute($: any, formulaValue: string): Promise<any> {
   const asyncFunction = Object.getPrototypeOf(async function () {
   }).constructor
   try {
