@@ -109,16 +109,17 @@ function packageEntrance(inputParams: Map<string, any>, materials: Namespace[], 
       })
     } else {
       (ns.items as FunInfo[]).forEach((funInfo) => {
+        const funcInputParam = funInfo.input? funInfo.input.map(item => item.name): ''
         if (funInfo.isAsync) {
           const AsyncFunction = Object.getPrototypeOf(async function () {
           }).constructor
           // Add async function
-          $[ns.name][funInfo.name] = new AsyncFunction(funInfo.body)
+          $[ns.name][funInfo.name] = funcInputParam? new AsyncFunction(...funcInputParam, funInfo.body): new AsyncFunction(funInfo.body)
         } else {
           const syncFunction = Object.getPrototypeOf(function () {
           }).constructor
           // Add sync function
-          $[ns.name][funInfo.name] = new syncFunction(funInfo.body)
+          $[ns.name][funInfo.name] = funcInputParam? new syncFunction(...funcInputParam, funInfo.body): new syncFunction(funInfo.body)
         }
       })
     }
