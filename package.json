@@ -1,6 +1,6 @@
 {
   "name": "@idealworld/formula-editor",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "A relatively complete formula editor",
   "scripts": {
     "build": "rimraf dist && vue-tsc && vite build",
