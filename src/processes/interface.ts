@@ -52,6 +52,7 @@ export interface EditorProps {
    *     label: '字段',
    *     isVar: true,
    *     showLabel: true,
+   *     showField: true,
    *     color: '#f8e3c5',
    *     items: [
    *       {
@@ -154,6 +155,12 @@ export interface Namespace {
    * Use {@link Namespace#label} when true, use {@link Namespace#name} when false
    */
   showLabel: boolean
+  /**
+   * Whether to display field in field management
+   * 
+   * Use {@link Namespace#label} when true, use {@link Namespace#name} when false
+   */
+  showField?: boolean
   /**
    * All items in the namespace
    */

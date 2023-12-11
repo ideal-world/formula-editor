@@ -31,6 +31,7 @@ interface MaterialItemTree {
 interface Material {
   nsLabel: string
   nsName: string
+  showField?: boolean
   items: MaterialItemTree[]
 }
 
@@ -70,11 +71,12 @@ const openDebugPanel = ref<boolean>(false)
 
 function findMaterials(isVar: boolean, filterName: string): Material[] {
   if (isVar) {
+    console.log('--------------', JSON.parse(JSON.stringify(props.materials)))
     return props.materials
       .filter((ns) => ns.isVar)
       .map((ns) => {
         let byCates = (ns.items as VarInfo[])
-          .filter((item) => filterName === '' || item.name?.includes(filterName) || item.label?.includes(filterName))
+          .filter((item) => filterName === '' || item.name?.includes(filterName))
           .map((item) => {
             return (
               item.cates?.map((cate) => {
@@ -111,6 +113,7 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
         return {
           nsLabel: ns.label,
           nsName: ns.name,
+          showField: ns.showField,
           items: items,
         }
       })
@@ -276,11 +279,11 @@ defineExpose({
             <el-tabs tab-position="bottom">
               <template v-for="materialVar in materialVars">
                 <el-tab-pane :label="materialVar.nsLabel">
-                  <el-tree :data="materialVar.items" node-key="id" accordion :empty-text="$t('editor.empty')">
+                  <el-tree :data="materialVar.items" node-key="id" default-expand-all accordion :empty-text="$t('editor.empty')">
                     <template #default="{ node, data }">
                       <div class="iw-editor-material__item" @click="insertMaterial(node.isLeaf, materialVar.nsName, data.name)">
                         <p class="iw-editor-material__item-tile">{{ data.name }}</p>
-                        <p class="iw-editor-material__item-note">{{ data.label }}</p>
+                        <p class="iw-editor-material__item-note" v-show="materialVar.showField">{{ data.label }}</p>
                       </div>
                     </template>
                   </el-tree>
@@ -295,7 +298,7 @@ defineExpose({
                 <el-tabs tab-position="bottom">
                   <template v-for="materialFun in materialFuns">
                     <el-tab-pane :label="materialFun.nsLabel">
-                      <el-tree :data="materialFun.items" node-key="id" accordion :empty-text="$t('editor.empty')">
+                      <el-tree :data="materialFun.items" node-key="id" default-expand-all accordion :empty-text="$t('editor.empty')">
                         <template #default="{ node, data }">
                           <div
                             class="iw-editor-material__item"
