@@ -1,0 +1,39 @@
+@import 'octicons-css/octicons.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Eliminating the effects of vitepress */
+.iw-editor {
+
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    border-width: 1px;
+    border-style: solid;
+  }
+
+  a {
+    text-decoration: none !important;
+  }
+
+  p {
+    line-height: 1;
+  }
+
+  p,
+  summary {
+    margin: 0;
+  }
+
+  ul {
+    margin: 0;
+  }
+
+  li+li {
+    margin-top: 0;
+  }
+}

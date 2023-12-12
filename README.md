@@ -34,7 +34,6 @@
 
 ![demo-i18n.png](demo-i18n.png)
 
-
 ## Documentation and examples
 
 [https://ideal-world.github.io/formula-editor/](https://ideal-world.github.io/formula-editor/)

@@ -1,6 +1,6 @@
 /**
  * Variable type enum
- * 
+ *
  * Used to specify the type of a variable, function parameter, or function return value
  */
 export enum VarKind {
@@ -11,19 +11,19 @@ export enum VarKind {
   STRINGS = 'STRINGS',
   NUMBERS = 'NUMBERS',
   BOOLEANS = 'BOOLEANS',
-  ANY = 'ANY'
+  ANY = 'ANY',
 }
 
 /**
  * Editor configuration properties
- * 
+ *
  */
 export interface EditorProps {
   /**
    * Target variable
-   * 
+   *
    * Used to specify the target object to which the current formula is applied. The editor will check whether the formula return type matches it.
-   * 
+   *
    * @example
    * ```
    * {
@@ -41,9 +41,9 @@ export interface EditorProps {
    * Material list
    *
    * Used to specify the variables and functions available in the current editor
-   * 
+   *
    * {@link Namespace}
-   * 
+   *
    * @example
    * ```
    * [
@@ -104,7 +104,7 @@ export interface EditorProps {
   materials: Namespace[]
   /**
    * Formula value
-   * 
+   *
    * @example
    * ```
    * $.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string')
@@ -113,7 +113,7 @@ export interface EditorProps {
   formulaValue?: string
   /**
    * Entry variables for material items
-   * 
+   *
    * Default is `$`
    */
   entrance?: string
@@ -131,7 +131,7 @@ export interface EditorProps {
 export interface Namespace {
   /**
    * Namespace name
-   * 
+   *
    * This field will serve as a unique identifier for the namespace
    */
   name: string
@@ -145,19 +145,19 @@ export interface Namespace {
   color?: string
   /**
    * Whether all items under this namespace are variables
-   * 
+   *
    * When it is true, it is a variable; when it is false, it is a function.
    */
   isVar: boolean
   /**
    * Whether to use display names in the formula editor
-   * 
+   *
    * Use {@link Namespace#label} when true, use {@link Namespace#name} when false
    */
   showLabel: boolean
   /**
    * Whether to display field in field management
-   * 
+   *
    * Use {@link Namespace#label} when true, use {@link Namespace#name} when false
    */
   showField?: boolean
@@ -190,13 +190,13 @@ export interface VarGuard {
   /**
    * Optional
    */
-  options?: [{ value: any; label: string }]
+  options?: [{ value: any, label: string }]
 }
 
 /**
  * Variable information
- * 
- * 
+ *
+ *
  * @example
  * ```
  * {
@@ -226,7 +226,7 @@ export interface VarInfo extends VarGuard {
   note?: string
   /**
    * Variable category
-   * 
+   *
    * One variable can correspond to multiple categories
    */
   cates?: string[]
@@ -238,7 +238,7 @@ export interface VarInfo extends VarGuard {
 
 /**
  * Function information
- * 
+ *
  * @example
  * ```
  * {
@@ -271,7 +271,7 @@ export interface FunInfo {
   label: string
   /**
    * Function description
-   * 
+   *
    * Support html tags
    */
   note?: string
@@ -281,13 +281,13 @@ export interface FunInfo {
   input: VarInfo[]
   /**
    * Whether the parameter is of variable length
-   * 
+   *
    * The variable length type is the type of the last input
    */
   isVarLen: boolean
   /**
    * Whether it is an asynchronous function
-   * 
+   *
    * Asynchronous functions will be called in the formula in the form of `(await <Full name of function>)`
    */
   isAsync: boolean
@@ -297,7 +297,7 @@ export interface FunInfo {
   output: VarGuard
   /**
    * Function body
-   * 
+   *
    * The function body is a JavaScript structure, which can be a single expression or a block statement
    * When it is a block-level statement, you need to use the `return` keyword to return the value
    * Function parameters are called using `arguments`
@@ -305,7 +305,7 @@ export interface FunInfo {
   body: string
   /**
    * Function category
-   * 
+   *
    * One function can correspond to multiple categories
    */
   cates: string[]

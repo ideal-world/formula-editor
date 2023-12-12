@@ -89,12 +89,14 @@ const materials: iwInterface.Namespace[] = [
 </script>
 
 <template>
-  <el-button @click="dialogVisible = true">打开</el-button>
+  <el-button @click="dialogVisible = true">
+    打开
+  </el-button>
   <el-dialog v-model="dialogVisible">
     <!-- v-model:formulaValue:formula value -->
     <!-- v-model:checkPass:Check the formula correct -->
     <!-- :targetVar:Target object of the formula -->
     <!-- :materials:Material collection -->
-    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :targetVar="targetVar" :materials="materials" />
+    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :target-var="targetVar" :materials="materials" />
   </el-dialog>
 </template>

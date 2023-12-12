@@ -1,12 +1,13 @@
+import locales from '../locales'
 import { VarKind } from './interface'
-import i18n from '../i18n'
-const { t } = i18n.global
+
+const { t } = locales.global
 
 /**
  * Default function library
  */
-export const DEFAULT_FUN_LIB =
-{
+export const DEFAULT_FUN_LIB
+= {
   name: 'fun',
   label: t('fun_lib.inner'),
   isVar: false,
@@ -114,4 +115,3 @@ export const DEFAULT_FUN_LIB =
     },
   ],
 }
-

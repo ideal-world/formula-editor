@@ -1,29 +1,7 @@
-<template>
-  <el-form>
-    <el-form-item label="Formula">
-      <el-input v-model="form.formulaValue" type="textarea" />
-    </el-form-item>
-    <el-form-item label="Parameters">
-      <el-input v-model="form.inputParams" type="textarea" rows="4" />
-    </el-form-item>
-    <el-form-item label="Materials">
-      <el-input v-model="form.materials" type="textarea" rows="30" />
-    </el-form-item>
-    <el-form-item label="Entrance">
-      <el-input v-model="form.entrance" />
-    </el-form-item>
-    <el-form-item>
-      <el-button type="primary" @click="onSubmit">Execute</el-button>
-    </el-form-item>
-    <el-form-item label="Result">
-      <span>{{ form.result }}</span>
-    </el-form-item>
-  </el-form>
-</template>
-
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { execute } from '../src/processes/executor'
+
 const form = reactive({
   materials: `[
  {
@@ -63,25 +41,70 @@ return inputParams`,
   result: '',
 })
 
-const onSubmit = async () => {
+async function onSubmit() {
   let inputParams
   let materials
   try {
-    inputParams = eval('(function() {' + form.inputParams + '}())')
-  } catch (e) {
-    form.result = 'Eval parameters error:' + e
+    // eslint-disable-next-line no-eval
+    inputParams = eval(`(function() {${form.inputParams}}())`)
+  }
+  catch (e) {
+    form.result = `Eval parameters error:${e}`
     return
   }
   try {
+    // eslint-disable-next-line no-eval
     materials = eval(form.materials)
-  } catch (e) {
-    form.result = 'Eval materials error:' + e
+  }
+  catch (e) {
+    form.result = `Eval materials error:${e}`
     return
   }
   try {
     form.result = await execute(inputParams, form.formulaValue, materials, form.entrance)
-  } catch (e) {
+  }
+  catch (e) {
     form.result = e
   }
 }
 </script>
+
+<template>
+  <div class="grid-cols-6">
+    <div class="col-span-1">
+      Formula
+    </div>
+    <div class="col-span-5">
+      <textarea v-model="form.formulaValue" class="iw-textarea iw-textarea-bordered w-full" style="border-width: 1px; border-style: solid;" />
+    </div>
+    <div class="col-span-1">
+      Parameters
+    </div>
+    <div class="col-span-5">
+      <textarea v-model="form.inputParams" class="iw-textarea iw-textarea-bordered w-full" rows="4" style="border-width: 1px; border-style: solid;" />
+    </div>
+    <div class="col-span-1">
+      Materials
+    </div>
+    <div class="col-span-5">
+      <textarea v-model="form.materials" class="iw-textarea iw-textarea-bordered w-full" rows="30" style="border-width: 1px; border-style: solid;" />
+    </div>
+    <div class="col-span-1">
+      Entrance
+    </div>
+    <div class="col-span-5">
+      <input v-model="form.entrance" class="iw-input iw-input-bordered w-full" style="border-width: 1px; border-style: solid;">
+    </div>
+    <div class="col-span-6">
+      <button class="iw-btn iw-btn-secondary iw-btn-xs" @click="onSubmit">
+        Execute
+      </button>
+    </div>
+    <div class="col-span-1">
+      Result
+    </div>
+    <div class="col-span-5">
+      {{ form.result }}
+    </div>
+  </div>
+</template>

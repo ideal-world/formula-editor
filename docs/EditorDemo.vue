@@ -1,12 +1,3 @@
-<template>
-  <div style="margin: 8px; color: red">Result：checkPass:{{ checkPass }} formulaValue:{{ formulaValue }}</div>
-
-  <el-button @click="dialogVisible = true">打开</el-button>
-  <el-dialog v-model="dialogVisible">
-    <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :targetVar="targetVar" :materials="materials" />
-  </el-dialog>
-</template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
 import { iwInterface } from '../src'
@@ -67,6 +58,7 @@ const materials: iwInterface.Namespace[] = [
     label: 'MODEL',
     isVar: true,
     showLabel: true,
+    showField: true,
     color: '#e1f3d8',
     items: [
       {
@@ -153,3 +145,21 @@ const materials: iwInterface.Namespace[] = [
   },
 ]
 </script>
+
+<template>
+  <div style="margin: 8px; color: red">
+    Result：checkPass:{{ checkPass }} formulaValue:{{ formulaValue }}
+  </div>
+
+  <button class="iw-btn" onclick="editor_container.showModal()" @click="dialogVisible = true">
+    打开
+  </button>
+  <dialog id="editor_container" class="iw-modal">
+    <div v-if="dialogVisible" class="iw-modal-box p-2">
+      <iw-editor v-model:formulaValue="formulaValue" v-model:checkPass="checkPass" :target-var="targetVar" :materials="materials" style="width: 800px;" />
+    </div>
+    <form method="dialog" class="iw-modal-backdrop flex justify-center p-1">
+      <button>关闭</button>
+    </form>
+  </dialog>
+</template>

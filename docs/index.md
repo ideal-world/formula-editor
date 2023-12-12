@@ -38,9 +38,9 @@ Therefore, a regular `formula` would be: `$.fun.sum($.field.age, 3)` .
 During actual execution, the execution engine will convert `material` and `formula` into JS code, such as:
 
 ```js
-let $ = {
+const $ = {
   fun: {
-    sum: function () {
+    sum() {
       return Array.from(arguments).reduce((a, b) => a + b)
     },
   },
@@ -49,8 +49,8 @@ let $ = {
   },
 }
 
-const asyncFunction = Object.getPrototypeOf(async function () {}).constructor
-const asyncFn = new asyncFunction('$', `return ` + formulaValue)
+const asyncFunction = Object.getPrototypeOf(async () => {}).constructor
+const asyncFn = new asyncFunction('$', `return ${formulaValue}`)
 return await asyncFn($)
 ```
 
@@ -188,4 +188,3 @@ Import components from this library in your own component:
 ```
 
 For the complete parameters of ``iw-editor``, see: [EditorProps API](api/namespaces/iwInterface/interfaces/EditorProps.html)
-

@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import { ElInput } from 'element-plus'
-import { computed, reactive, ref } from 'vue'
-import { ChatLineRound, Search, VideoPlay } from '@element-plus/icons-vue'
-import CmWrapComp, { FormulaResult } from './CmWrap.vue'
-import DebugComp from './Debug.vue'
-import { iwInterface } from '../processes'
-import { EditorProps, FunInfo, Namespace, VarInfo } from '../processes/interface'
-import { groupBy } from '../utils/basic'
+import { computed, onMounted, reactive, ref } from 'vue'
+import type { iwInterface } from '../processes'
+import type { EditorProps, FunInfo, Namespace, VarInfo } from '../processes/interface'
+import { getParentWithClass, groupBy } from '../utils/basic'
 import { DEFAULT_FUN_LIB } from '../processes/funcLib'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-
-const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
+import * as iconSvg from '../assets/icon'
+import DebugComp from './Debug.vue'
+import CmWrapComp from './CmWrap.vue'
+import type { FormulaResult } from './CmWrap.vue'
 
 const props = withDefaults(defineProps<EditorProps>(), {
   addDefaultFunLib: true,
   formulaValue: '',
   entrance: '$',
 })
+
+const emit = defineEmits(['update:formulaValue', 'update:checkPass'])
 
 interface MaterialItemTree {
   id: string
@@ -40,24 +38,25 @@ interface LabelNameConf {
 }
 
 if (props.addDefaultFunLib) {
-  let customFunNs = props.materials.find((ns) => ns.name === DEFAULT_FUN_LIB.name)
+  const customFunNs = props.materials.find(ns => ns.name === DEFAULT_FUN_LIB.name)
   if (customFunNs) {
-    let customFuns = customFunNs.items as FunInfo[]
-    let defaultFuns = DEFAULT_FUN_LIB.items as FunInfo[]
+    const customFuns = customFunNs.items as FunInfo[]
+    const defaultFuns = DEFAULT_FUN_LIB.items as FunInfo[]
     defaultFuns.forEach((funInfo) => {
-      if (customFuns.find((fun) => fun.name === funInfo.name)) {
+      if (customFuns.find(fun => fun.name === funInfo.name))
         return
-      }
+
       customFuns.push(funInfo)
     })
-  } else {
+  }
+  else {
     props.materials.unshift(DEFAULT_FUN_LIB)
   }
 }
 
 const CmWrapCompRef = ref()
 const DebugCompRef = ref()
-const materialNote = ref<String>('')
+const materialNote = ref<string>('')
 const materialVars = reactive<Material[]>(findMaterials(true, ''))
 const materialFuns = reactive<Material[]>(findMaterials(false, ''))
 const searchMaterialVarKey = ref<string>('')
@@ -71,12 +70,11 @@ const openDebugPanel = ref<boolean>(false)
 
 function findMaterials(isVar: boolean, filterName: string): Material[] {
   if (isVar) {
-    console.log('--------------', JSON.parse(JSON.stringify(props.materials)))
     return props.materials
-      .filter((ns) => ns.isVar)
+      .filter(ns => ns.isVar)
       .map((ns) => {
-        let byCates = (ns.items as VarInfo[])
-          .filter((item) => filterName === '' || item.name?.includes(filterName))
+        const byCates = (ns.items as VarInfo[])
+          .filter(item => filterName === '' || item.name?.includes(filterName))
           .map((item) => {
             return (
               item.cates?.map((cate) => {
@@ -85,7 +83,7 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
                   name: item.name!,
                   label: item.label ?? '',
                   note: item.note ?? '',
-                  cate: cate,
+                  cate,
                 }
               }) ?? [
                 {
@@ -99,9 +97,9 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
             )
           })
           .flat()
-        let grouped = groupBy(byCates, (item) => item?.cate)
-        let items = []
-        for (let cate in grouped) {
+        const grouped = groupBy(byCates, item => item?.cate)
+        const items = []
+        for (const cate in grouped) {
           items.push({
             id: '',
             name: cate,
@@ -114,15 +112,16 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
           nsLabel: ns.label,
           nsName: ns.name,
           showField: ns.showField,
-          items: items,
+          items,
         }
       })
-  } else {
+  }
+  else {
     return props.materials
-      .filter((ns) => !ns.isVar)
+      .filter(ns => !ns.isVar)
       .map((ns) => {
-        let byCates = (ns.items as FunInfo[])
-          .filter((item) => filterName === '' || item.name.includes(filterName) || item.label.includes(filterName))
+        const byCates = (ns.items as FunInfo[])
+          .filter(item => filterName === '' || item.name.includes(filterName) || item.label.includes(filterName))
           .map((item) => {
             return (
               item.cates?.map((cate) => {
@@ -131,7 +130,7 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
                   name: item.name,
                   label: item.label ?? '',
                   note: item.note ?? '',
-                  cate: cate,
+                  cate,
                 }
               }) ?? [
                 {
@@ -145,9 +144,9 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
             )
           })
           .flat()
-        let grouped = groupBy(byCates, (item) => item?.cate)
-        let items = []
-        for (let cate in grouped) {
+        const grouped = groupBy(byCates, item => item?.cate)
+        const items = []
+        for (const cate in grouped) {
           items.push({
             id: '',
             name: cate,
@@ -159,31 +158,52 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
         return {
           nsLabel: ns.label,
           nsName: ns.name,
-          items: items,
+          items,
         }
       })
   }
 }
 
 function searchMaterials(isVar: boolean, filterName: string) {
-  console.log('filter' + filterName)
-  if (isVar) {
+  if (isVar)
     materialVars.splice(0, materialVars.length)
-  } else {
+
+  else
     materialFuns.splice(0, materialFuns.length)
-  }
+
   findMaterials(isVar, filterName).forEach((material) => {
-    if (isVar) {
+    if (isVar)
       materialVars.push(material)
-    } else {
+
+    else
       materialFuns.push(material)
-    }
   })
 }
 
-function insertMaterial(isLeaf: boolean, ns: string, name: string) {
-  isLeaf && CmWrapCompRef.value.insertMaterial(ns, name)
-}
+onMounted(() => {
+  document.querySelectorAll('.iw-editor').forEach((editorEle) => {
+    editorEle.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement
+      const itemEle = getParentWithClass(target, 'iw-editor-material__item')
+      if (itemEle) {
+        const name = itemEle.dataset.name
+        const nsName = itemEle.dataset.nsName
+        CmWrapCompRef.value.insertMaterial(nsName, name)
+      }
+    })
+    editorEle.addEventListener('mouseover', (e) => {
+      const target = e.target as HTMLElement
+      const itemEle = getParentWithClass(target, 'iw-editor-material__item--is-fun')
+      if (itemEle) {
+        const note = itemEle.dataset.note
+        materialNote.value = note ?? ''
+      }
+      else {
+        materialNote.value = ''
+      }
+    })
+  })
+})
 
 function watchFormulaResult(_formulaResult: FormulaResult) {
   formulaResult.value = _formulaResult.value
@@ -193,41 +213,66 @@ function watchFormulaResult(_formulaResult: FormulaResult) {
   emit('update:checkPass', _formulaResult.pass)
 }
 
+
+function generateMaterialTree(materialItems: MaterialItemTree[], nsName: string, isFunTree: boolean, showField?: boolean): string {
+  let html = ''
+  for (const item of materialItems) {
+    if (item.children) {
+      html += `<li>
+          <details>
+            <summary>${item.name}</summary>
+            <ul>${generateMaterialTree(item.children, nsName, isFunTree, showField)}</ul>
+          </details>
+        </li>`
+    }
+    else {
+      html += `<li>
+          <div class="iw-editor-material__item${isFunTree ? ' iw-editor-material__item--is-fun' : ''}" data-ns-name="${nsName}" data-name="${item.name}" data-note="${item.note}">
+            <p class="iw-editor-material__item-title">${item.name}</p>
+            ${showField ? `<p class="iw-editor-material__item-label">${item.label}</p>` : ``}
+          </div>
+        </li>`
+    }
+  }
+  return html
+}
+
 function getFormulaWithLabel() {
-  const reg = new RegExp('(await )?\\' + props.entrance + '\\.(\\w+\\.\\w+)', 'g')
+  const reg = new RegExp(`(await )?\\${props.entrance}\\.(\\w+\\.\\w+)`, 'g')
   let _value = formulaResult.value
-  let labelNameConf: LabelNameConf = {}
-  _value.match(reg)?.forEach(item => {
-    let namespace = item.split('.')[1]
-    let name = item.split('.')[2]
-    let ns = props.materials.find((ns) => ns.name === namespace)
+  const labelNameConf: LabelNameConf = {}
+  _value.match(reg)?.forEach((item) => {
+    const namespace = item.split('.')[1]
+    const name = item.split('.')[2]
+    const ns = props.materials.find(ns => ns.name === namespace)
     let label = name
     if (ns) {
       label = ns?.isVar
-        ? (ns?.items as iwInterface.VarInfo[]).find((item) => item.name === name)?.label ?? name
-        : (ns?.items as iwInterface.FunInfo[]).find((item) => item.name === name)?.label ?? name
+        ? (ns?.items as iwInterface.VarInfo[]).find(item => item.name === name)?.label ?? name
+        : (ns?.items as iwInterface.FunInfo[]).find(item => item.name === name)?.label ?? name
     }
     labelNameConf[`${item}`] = label
   })
-  Object.keys(labelNameConf).forEach(key => {
+  Object.keys(labelNameConf).forEach((key) => {
     _value = _value.replaceAll(key, labelNameConf[key])
   })
   return _value
 }
 
 const filterUsedMaterials = computed(() => {
-  let formulaMaterials = formulaResult.materials
+  const formulaMaterials = formulaResult.materials
   return props.materials
     .map((ns) => {
       let items
       if (ns.isVar) {
         items = (ns.items as VarInfo[]).filter((varInfo) => {
-          let name = props.entrance + '.' + ns.name + '.' + varInfo.name
+          const name = `${props.entrance}.${ns.name}.${varInfo.name}`
           return formulaMaterials.includes(name)
         })
-      } else {
+      }
+      else {
         items = (ns.items as FunInfo[]).filter((funInfo) => {
-          let name = props.entrance + '.' + ns.name + '.' + funInfo.name
+          const name = `${props.entrance}.${ns.name}.${funInfo.name}`
           return formulaMaterials.includes(name)
         })
       }
@@ -235,10 +280,10 @@ const filterUsedMaterials = computed(() => {
         name: ns.name,
         label: ns.label,
         isVar: ns.isVar,
-        items: items,
+        items,
       } as Namespace
     })
-    .filter((ns) => ns.items.length > 0)
+    .filter(ns => ns.items.length > 0)
 })
 
 async function getResultVal() {
@@ -248,169 +293,101 @@ async function getResultVal() {
 
 defineExpose({
   getFormulaWithLabel,
-  getResultVal
+  getResultVal,
 })
 </script>
 
 <template>
-  <div class="iw-editor">
-    <el-row>
-      <el-col class="iw-editor-main" :span="openDebugPanel ? 16 : 24">
-        <el-row class="iw-editor-toolbar">
-          <el-col :span="12">{{ props.targetVar.label }}</el-col>
-          <el-col :span="12" class="iw-editor-toolbar__opt">
-            <el-button :icon="VideoPlay" link @click="openDebugPanel = !openDebugPanel">{{ $t('editor.debug') }}</el-button>
-          </el-col>
-        </el-row>
-        <el-row class="iw-editor-formula">
-          <cm-wrap-comp
-            ref="CmWrapCompRef"
-            class="iw-editor-formula--size"
-            @update-formula-result="watchFormulaResult"
-            :formula-value="props.formulaValue"
-            :target-guard="targetVar"
-            :materials="materials"
-            :entrance="entrance"
-          />
-        </el-row>
-        <el-row class="iw-editor-material">
-          <el-col class="iw-editor-material__var-wrapper" :span="6">
-            <el-input :placeholder="$t('editor.search_var')" v-model="searchMaterialVarKey" :prefix-icon="Search" @input="searchMaterials(true, searchMaterialVarKey)" />
-            <el-tabs tab-position="bottom">
-              <template v-for="materialVar in materialVars">
-                <el-tab-pane :label="materialVar.nsLabel">
-                  <el-tree :data="materialVar.items" node-key="id" default-expand-all accordion :empty-text="$t('editor.empty')">
-                    <template #default="{ node, data }">
-                      <div class="iw-editor-material__item" @click="insertMaterial(node.isLeaf, materialVar.nsName, data.name)">
-                        <p class="iw-editor-material__item-tile">{{ data.name }}</p>
-                        <p class="iw-editor-material__item-note" v-show="materialVar.showField">{{ data.label }}</p>
-                      </div>
-                    </template>
-                  </el-tree>
-                </el-tab-pane>
-              </template>
-            </el-tabs>
-          </el-col>
-          <el-col class="iw-editor-material__func-wrapper" :span="18">
-            <el-row>
-              <el-col class="iw-editor-material__func-list" :span="10">
-                <el-input :placeholder="$t('editor.search_fun')" v-model="searchMaterialFunKey" :prefix-icon="Search" @input="searchMaterials(false, searchMaterialFunKey)" />
-                <el-tabs tab-position="bottom">
-                  <template v-for="materialFun in materialFuns">
-                    <el-tab-pane :label="materialFun.nsLabel">
-                      <el-tree :data="materialFun.items" node-key="id" default-expand-all accordion :empty-text="$t('editor.empty')">
-                        <template #default="{ node, data }">
-                          <div
-                            class="iw-editor-material__item"
-                            @click="insertMaterial(node.isLeaf, materialFun.nsName, data.name)"
-                            @mouseenter="materialNote = data.note"
-                            @mouseleave="materialNote = ''"
-                          >
-                            <p class="iw-editor-material__item-tile">{{ data.name }}</p>
-                            <p class="iw-editor-material__item-note">{{ data.label }}</p>
-                          </div>
-                        </template>
-                      </el-tree>
-                    </el-tab-pane>
-                  </template>
-                </el-tabs>
-              </el-col>
-              <el-col class="iw-editor-material__func-note" :span="14">
-                <span v-html="materialNote" v-show="materialNote !== ''" />
-                <div class="iw-editor-material__func-note-tooltip" v-show="materialNote === ''">
-                  <ChatLineRound style="width: 2em; height: 2em" />
-                  <span>{{ $t('editor.tips') }}</span>
-                  <span>{{ $t('editor.tip1') }}</span>
-                  <span>{{ $t('editor.tip2') }}</span>
-                  <span>{{ $t('editor.tip3') }}</span>
-                  <span v-html="$t('editor.tip4', { entrance: props.entrance })" />
-                </div>
-              </el-col>
-            </el-row>
-          </el-col>
-        </el-row>
-      </el-col>
-      <el-col class="iw-editor-debug" :span="openDebugPanel ? 8 : 0" v-show="openDebugPanel">
-        <debug-comp ref="DebugCompRef" v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value" v-model:pass="formulaResult.pass" :entrance="props.entrance" />
-      </el-col>
-    </el-row>
+  <div :class="`iw-editor text-base text-base-content bg-base-100 border border-solid border-base-300 rounded-md grid ${openDebugPanel ? 'grid-cols-12' : ''}`">
+    <div :class="`${openDebugPanel ? 'col-span-8' : ''}`">
+      <div class="bg-base-200 p-1 border-solid border-b border-b-base-300 flex justify-between">
+        <div>
+          {{ props.targetVar.label }}
+        </div>
+        <div class="iw-editor-toolbar__opt">
+          <button class="iw-btn iw-btn-ghost iw-btn-xs" @click="openDebugPanel = !openDebugPanel">
+            <i :class="iconSvg.DEBUG" />  {{ $t('editor.debug') }}
+          </button>
+        </div>
+      </div>
+      <div class="iw-editor-formula">
+        <CmWrapComp
+          ref="CmWrapCompRef" class="w-full min-h-[200px]" :formula-value="props.formulaValue"
+          :target-guard="targetVar" :materials="materials" :entrance="entrance" @update-formula-result="watchFormulaResult"
+        />
+      </div>
+      <div class="iw-editor-material border-solid border-t border-t-base-300 grid grid-cols-12">
+        <div :class="`border-solid border-r border-r-base-300 ${openDebugPanel ? 'col-span-6' : 'col-span-3'}`">
+          <input
+            v-model="searchMaterialVarKey" :placeholder="$t('editor.search_var')"
+            class="iw-input iw-input-ghost iw-input-sm rounded-none focus:outline-none focus:border-none w-full"
+            @input="searchMaterials(true, searchMaterialVarKey)"
+          >
+          <div class="border-solid border-t border-t-base-300 w-full h-[300px] overflow-auto">
+            <ul class="iw-menu iw-menu-sm">
+              <li v-for="materialVar in materialVars" :key="materialVar.nsName">
+                <details open>
+                  <summary>{{ materialVar.nsLabel }}</summary>
+                  <ul v-html="generateMaterialTree(materialVar.items, materialVar.nsName, false, materialVar.showField)" />
+                </details>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div :class="`grid grid-cols-12 ${openDebugPanel ? 'col-span-6' : 'col-span-9'}`">
+          <div :class="`border-solid border-r border-r-base-300 ${openDebugPanel ? 'col-span-12' : 'col-span-5'}`">
+            <input
+              v-model="searchMaterialFunKey" :placeholder="$t('editor.search_fun')"
+              class="iw-input iw-input-ghost iw-input-sm rounded-none focus:outline-none focus:border-none w-full"
+              @input="searchMaterials(false, searchMaterialFunKey)"
+            >
+            <div class="border-solid border-t border-t-base-300 w-full h-[300px] overflow-auto">
+              <ul class="iw-menu iw-menu-sm">
+                <li v-for="materialFun in materialFuns" :key="materialFun.nsName">
+                  <details open>
+                    <summary>{{ materialFun.nsLabel }}</summary>
+                    <ul v-html="generateMaterialTree(materialFun.items, materialFun.nsName, true, materialFun.showField)" />
+                  </details>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div v-show="!openDebugPanel" class="p-1 col-span-7">
+            <div v-show="materialNote !== ''" v-html="materialNote" />
+            <div v-show="materialNote === ''" class="flex flex-col justify-center items-center p-1 h-full text-base-300">
+              <i :class="iconSvg.INFO" />
+              <span>{{ $t('editor.tips') }}</span>
+              <span>{{ $t('editor.tip1') }}</span>
+              <span>{{ $t('editor.tip2') }}</span>
+              <span>{{ $t('editor.tip3') }}</span>
+              <span v-html="$t('editor.tip4', { entrance: props.entrance })" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-show="openDebugPanel"
+      :class="`iw-editor-debug ${openDebugPanel ? 'col-span-4' : ''}`"
+    >
+      <DebugComp
+        ref="DebugCompRef" v-model:materials="filterUsedMaterials" v-model:formula-value="formulaResult.value"
+        v-model:pass="formulaResult.pass" :entrance="props.entrance"
+      />
+    </div>
   </div>
 </template>
 
-<style lang="scss" scoped>
-@import '../assets/main.scss';
-
-@include b('editor') {
-  border: 1px solid var(--el-border-color);
-  border-radius: 4px;
-  font-size: 11pt;
+<style lang="css">
+.iw-editor-material__item{
+  @apply flex flex-col items-start;
 }
 
-@include b('editor-toolbar') {
-  background-color: var(--el-color-info-light-9);
-  padding: 4px;
-  border-bottom: 1px solid var(--el-border-color);
-
-  @include e('opt') {
-    text-align: right;
-  }
+.iw-editor-material__item-label {
+  @apply text-info;
 }
 
-@include b('editor-formula') {
-  @include m('size') {
-    width: 100%;
-    min-height: 200px;
-  }
-}
-
-@include b('editor-material') {
-  border-top: 1px solid var(--el-border-color);
-
-  @include e('var-wrapper') {
-    border-right: 1px solid var(--el-border-color);
-  }
-
-  @include e('item') {
-    p {
-      line-height: 1.3;
-      margin: 1px 0;
-    }
-  }
-
-  @include e('item-note') {
-    color: var(--el-color-info-light-3);
-  }
-
-  @include e('func-list') {
-    border-right: 1px solid var(--el-border-color);
-  }
-
-  @include e('func-note') {
-    padding: 4px;
-  }
-
-  @include e('func-note-tooltip') {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 4px;
-    height: 100%;
-    font-size: 10pt;
-    color: var(--el-color-info-light-7);
-
-    span {
-      padding: 2px 0;
-      text-align: center;
-    }
-  }
-}
-</style>
-
-<style lang="scss">
-@import '../assets/main.scss';
-
-@include b('editor-formula') {
+.iw-editor-formula {
   textarea {
     border: none;
     box-shadow: none;
@@ -424,56 +401,6 @@ defineExpose({
   textarea:focus {
     border: none;
     box-shadow: none;
-  }
-}
-
-@include b('editor-material') {
-  .el-input__wrapper {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    border-bottom: 1px solid var(--el-border-color);
-  }
-
-  .el-input__wrapper:hover {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .is_focus {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .el-tabs {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-
-    .el-tabs__item {
-      padding: 0 7px;
-    }
-
-    .el-tab-pane {
-      height: 250px;
-    }
-  }
-
-  .el-tree-node__content {
-    height: auto;
-    padding: 2px 0;
-  }
-
-  .el-tabs__header {
-    padding: 0 6px;
-    border-top: 1px solid var(--el-border-color);
-    border-bottom-width: 0;
-  }
-
-  .el-tabs__nav-wrap::after {
-    height: 0;
   }
 }
 </style>

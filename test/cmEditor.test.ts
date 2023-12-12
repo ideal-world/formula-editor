@@ -1,16 +1,16 @@
 import { assert, describe, it } from 'vitest'
-import { DEFAULT_FUN_LIB } from '../src/processes/funcLib'
-import { diagnosticFormula } from '../src/processes/cmEditor'
 import { syntaxTree } from '@codemirror/language'
-import { Namespace, VarInfo, VarKind } from '../src/processes/interface'
-import { Diagnostic } from '@codemirror/lint'
+import type { Diagnostic } from '@codemirror/lint'
 import { EditorState } from '@codemirror/state'
 import { javascriptLanguage } from '@codemirror/lang-javascript'
-import { iwInterface } from '../src'
+import { VarKind } from '../src/processes/interface'
+import type { Namespace, VarInfo } from '../src/processes/interface'
+import { diagnosticFormula } from '../src/processes/cmEditor'
+import { DEFAULT_FUN_LIB } from '../src/processes/funcLib'
+import type { iwInterface } from '../src'
 
 describe('cmEditor verify', () => {
-
-  let testMaterialVars: Namespace[] = [
+  const testMaterialVars: Namespace[] = [
     {
       name: 'field',
       label: '字段',
@@ -24,26 +24,26 @@ describe('cmEditor verify', () => {
           kind: VarKind.NUMBER,
         } as VarInfo,
       ],
-    }]
+    },
+  ]
 
-  let miniMaterials = testMaterialVars
+  const miniMaterials = testMaterialVars
   miniMaterials.push(DEFAULT_FUN_LIB)
 
   function verify(formula: string, materials: Namespace[], expectedOutputKind: iwInterface.VarKind) {
-    let state = EditorState.create({
+    const state = EditorState.create({
       doc: formula,
       extensions: [javascriptLanguage.extension],
     })
-    let diagnostics: Diagnostic[] = []
-    let verifiedNode: [number, number][] = []
-    let usedMaterials: string[] = []
+    const diagnostics: Diagnostic[] = []
+    const verifiedNode: [number, number][] = []
+    const usedMaterials: string[] = []
     syntaxTree(state)
       .topNode.cursor()
       .iterate((node) => {
-        diagnosticFormula(node.node, state, expectedOutputKind, diagnostics, '$', verifiedNode, namespace => materials.find(ns => ns.name === namespace), name => {
-          if (!usedMaterials.includes(name)) {
+        diagnosticFormula(node.node, state, expectedOutputKind, diagnostics, '$', verifiedNode, namespace => materials.find(ns => ns.name === namespace), (name) => {
+          if (!usedMaterials.includes(name))
             usedMaterials.push(name)
-          }
         })
       })
     return [diagnostics, usedMaterials]
@@ -89,13 +89,19 @@ describe('cmEditor verify', () => {
     assert.deepEqual(verify('true', [], VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [boolean]', 0, 4]))
     assert.deepEqual(verify(`'hi'`, [], VarKind.NUMBER)[0], expects(['The expected format is [numeric], the actual format is [string]', 0, 4]))
     assert.deepEqual(verify(`'hi'+'hi'`, [], VarKind.NUMBER)[0], expects(
-      ['The expected format is [numeric], the actual format is [string]', 0, 4], ['The expected format is [numeric], the actual format is [string]', 5, 9]))
+      ['The expected format is [numeric], the actual format is [string]', 0, 4],
+      ['The expected format is [numeric], the actual format is [string]', 5, 9],
+    ))
     assert.deepEqual(verify(`$.field.age`, testMaterialVars, VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 0, 11]))
     assert.deepEqual(verify(`$.fun.sum(1,2)`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(['The expected format is [string], the actual format is [numeric]', 0, 9]))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.lower('1'))`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(
-      ['The expected format is [string], the actual format is [numeric]', 0, 9], ['The expected format is [numeric], the actual format is [string]', 12, 23]))
+      ['The expected format is [string], the actual format is [numeric]', 0, 9],
+      ['The expected format is [numeric], the actual format is [string]', 12, 23],
+    ))
     assert.deepEqual(verify(`$.fun.sum(1,$.fun.sum($.fun.lower('1')))`, [DEFAULT_FUN_LIB], VarKind.STRING)[0], expects(
-      ['The expected format is [string], the actual format is [numeric]', 0, 9], ['The expected format is [numeric], the actual format is [string]', 22, 33]))
+      ['The expected format is [string], the actual format is [numeric]', 0, 9],
+      ['The expected format is [numeric], the actual format is [string]', 22, 33],
+    ))
     assert.deepEqual(verify(`$.fun.sum($.field.age,$.fun.sum($.fun.lower('1')))+$.field.age`, miniMaterials, VarKind.STRING)[0], expects(
       ['The expected format is [string], the actual format is [numeric]', 0, 9],
       ['The expected format is [numeric], the actual format is [string]', 32, 43],
@@ -104,8 +110,8 @@ describe('cmEditor verify', () => {
     assert.deepEqual(verify(`$.field.age+$.fun.sum($.field.age,$.fun.sum($.fun.lower('1')))`, miniMaterials, VarKind.STRING)[0], expects(
       ['The expected format is [string], the actual format is [numeric]', 0, 11],
       ['The expected format is [string], the actual format is [numeric]', 12, 21],
-      ['The expected format is [numeric], the actual format is [string]', 44, 55]),
-    )
+      ['The expected format is [numeric], the actual format is [string]', 44, 55],
+    ))
     assert.deepEqual(verify(`1`, miniMaterials, VarKind.NUMBER)[0], [])
     assert.deepEqual(verify(`true`, miniMaterials, VarKind.BOOLEAN)[0], [])
     assert.deepEqual(verify(`'hi'`, miniMaterials, VarKind.STRING)[0], [])
@@ -149,7 +155,9 @@ describe('cmEditor verify', () => {
 
   it('expression', () => {
     assert.deepEqual(verify(`$.fun.sum(1,2)>0?'':''`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['The expected format is [numeric], the actual format is [string]', 17, 19], ['The expected format is [numeric], the actual format is [string]', 20, 22]))
+      ['The expected format is [numeric], the actual format is [string]', 17, 19],
+      ['The expected format is [numeric], the actual format is [string]', 20, 22],
+    ))
     assert.deepEqual(verify(`$.fun.sum($.fun.sum(1,2)>0?'':'',2)>0?'':''`, miniMaterials, VarKind.STRING)[0], expects(
       ['The expected format is [numeric], the actual format is [string]', 27, 29],
       ['The expected format is [numeric], the actual format is [string]', 30, 32],
@@ -160,12 +168,16 @@ describe('cmEditor verify', () => {
       ['The expected format is [string], the actual format is [numeric]', 33, 36],
     ))
     assert.deepEqual(verify(`false?'1':$.field.age>3?($.fun.sum(1,'2')>0?'222':'333'):'22'`, miniMaterials, VarKind.STRING)[0], expects(
-      ['The expected format is [numeric], the actual format is [string]', 37, 40]))
+      ['The expected format is [numeric], the actual format is [string]', 37, 40],
+    ))
     assert.deepEqual(verify(`false?'1':$.field.age>3?($.fun.sum(1,2)?'222':'333'):'22'`, miniMaterials, VarKind.STRING)[0], expects(
-      ['The expected format is [boolean], the actual format is [numeric]', 25, 34]))
+      ['The expected format is [boolean], the actual format is [numeric]', 25, 34],
+    ))
 
     assert.deepEqual(verify(`'1'&&'2'`, miniMaterials, VarKind.NUMBER)[0], expects(
-      ['The expected format is [numeric], the actual format is [string]', 0, 3], ['The expected format is [numeric], the actual format is [string]', 5, 8]))
+      ['The expected format is [numeric], the actual format is [string]', 0, 3],
+      ['The expected format is [numeric], the actual format is [string]', 5, 8],
+    ))
 
     assert.deepEqual(verify(`'1'&&'2'`, miniMaterials, VarKind.STRING)[0], [])
     assert.deepEqual(verify(`(1+0)>2?'222':'343'`, miniMaterials, VarKind.STRING)[0], [])
@@ -198,7 +210,7 @@ describe('cmEditor verify', () => {
       '$.field.age',
       '$.fun.lower',
       '$.fun.sum',
-      '$.fun.httpGet'])
+      '$.fun.httpGet',
+    ])
   })
-
 })

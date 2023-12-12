@@ -35,7 +35,7 @@ jobs:
 
       - name: Build
         run: npm run build
-          
+
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v2
         with:

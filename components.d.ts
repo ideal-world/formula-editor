@@ -10,14 +10,5 @@ declare module 'vue' {
     CmWrap: typeof import('./src/components/CmWrap.vue')['default']
     Debug: typeof import('./src/components/Debug.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
-    ElButton: typeof import('element-plus/es')['ElButton']
-    ElCol: typeof import('element-plus/es')['ElCol']
-    ElDivider: typeof import('element-plus/es')['ElDivider']
-    ElFormItem: typeof import('element-plus/es')['ElFormItem']
-    ElInput: typeof import('element-plus/es')['ElInput']
-    ElRow: typeof import('element-plus/es')['ElRow']
-    ElTabPane: typeof import('element-plus/es')['ElTabPane']
-    ElTabs: typeof import('element-plus/es')['ElTabs']
-    ElTree: typeof import('element-plus/es')['ElTree']
   }
 }
