@@ -1,7 +1,7 @@
 {
   "name": "@idealworld/formula-editor",
   "type": "module",
-  "version": "0.5.11",
+  "version": "0.6.0",
   "description": "A relatively complete formula editor",
   "author": {
     "name": "gudaoxuri",
