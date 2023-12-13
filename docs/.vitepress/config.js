@@ -13,16 +13,7 @@ export default {
   },
   vite: {
     build: {
-      rollupOptions: {
-        external: ['vue', 'vue-i18n', 'codemirror', 'octicons-css', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/],
-        output: {
-          exports: 'named',
-          globals: {
-            vue: 'Vue',
-          },
-        },
-      },
-      emptyOutDir: false,
+      chunkSizeWarningLimit: 1500,
     },
   },
 }
