@@ -213,7 +213,6 @@ function watchFormulaResult(_formulaResult: FormulaResult) {
   emit('update:checkPass', _formulaResult.pass)
 }
 
-
 function generateMaterialTree(materialItems: MaterialItemTree[], nsName: string, isFunTree: boolean, showField?: boolean): string {
   let html = ''
   for (const item of materialItems) {

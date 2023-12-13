@@ -8,7 +8,7 @@ export default {
   },
   plugins: [daisyui],
   daisyui: {
-    prefix: "iw-",
+    prefix: 'iw-',
     themes: ['light', 'dark', 'cupcake', 'forest', 'lofi', 'black', 'acid', 'lemonade', 'night', 'coffee'],
   },
 }

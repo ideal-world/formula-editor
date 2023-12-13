@@ -11,4 +11,18 @@ export default {
     ],
     socialLinks: [{ icon: 'github', link: 'https://github.com/ideal-world/formula-editor' }],
   },
+  vite: {
+    build: {
+      rollupOptions: {
+        external: ['vue', 'vue-i18n', 'codemirror', 'octicons-css', 'eslint-linter-browserify', 'vue-codemirror6', /@codemirror\/.+/, /@lezer\/.+/],
+        output: {
+          exports: 'named',
+          globals: {
+            vue: 'Vue',
+          },
+        },
+      },
+      emptyOutDir: false,
+    },
+  },
 }

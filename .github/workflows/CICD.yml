@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-  
+
       - name: Setup pnpm cache
         uses: actions/cache@v3
         with:
@@ -78,12 +78,12 @@ jobs:
         with:
           version: 8
           run_install: false
-  
+
       - name: Get pnpm store directory
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-    
+
       - name: Setup pnpm cache
         uses: actions/cache@v3
         with:
