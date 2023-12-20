@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { iwInterface } from '../src'
 
 const formulaValue = ref<string>(`$.fun.concat($.fun.sum(1,$.field.age),3, true, ['1','2'], 'string',$.param.someVar)`)
 const checkPass = ref<boolean>(true)
 const dialogVisible = ref<boolean>(false)
 
-const targetVar: iwInterface.VarInfo = {
+const targetVar: iwInterface.VarInfo = reactive({
   name: 'formName',
   label: 'form title',
   kind: iwInterface.VarKind.STRING,
   note: 'Display name of the form',
   minLen: 2,
   maxLen: 20,
-}
+})
 
-const materials: iwInterface.Namespace[] = [
+const materials: iwInterface.Namespace[] = reactive([
   {
     name: 'field',
     label: 'FIELD',
@@ -143,11 +143,14 @@ const materials: iwInterface.Namespace[] = [
       },
     ],
   },
-]
+])
 </script>
 
 <template>
   <div style="margin: 8px; color: red">
+    formulaValue: <input v-model="formulaValue" class="iw-input iw-input-bordered w-full" style="border-width: 1px; border-style: solid;">
+    targetVar Label: <input v-model="targetVar.label" class="iw-input iw-input-bordered w-full" style="border-width: 1px; border-style: solid;">
+    materials[0].label: <input v-model="materials[0].label" class="iw-input iw-input-bordered w-full" style="border-width: 1px; border-style: solid;">
     Result：checkPass:{{ checkPass }} formulaValue:{{ formulaValue }}
   </div>
 

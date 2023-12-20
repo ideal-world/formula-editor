@@ -11,7 +11,7 @@ import type { Extension } from '@codemirror/state'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import { Decoration, EditorView, MatchDecorator, ViewPlugin, WidgetType, drawSelection, highlightSpecialChars, keymap } from '@codemirror/view'
 import * as eslint from 'eslint-linter-browserify'
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import CodeMirror from 'vue-codemirror6'
 import { useI18n } from 'vue-i18n'
 import type { iwInterface } from '../processes'
@@ -21,9 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   formulaValue: '',
   entrance: '$',
 })
-
 const emit = defineEmits(['updateFormulaResult'])
-
 const { t } = useI18n()
 
 export interface FormulaResult {
@@ -43,6 +41,10 @@ const formulaResult = reactive<FormulaResult>({
   value: props.formulaValue,
   pass: true,
   materials: [],
+})
+
+watch(() => props.formulaValue, () => {
+  formulaResult.value = props.formulaValue
 })
 
 const codeEditor = ref<InstanceType<typeof CodeMirror> | undefined>()

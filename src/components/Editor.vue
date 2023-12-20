@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import * as iconSvg from '../assets/icon'
 import type { iwInterface } from '../processes'
+import { DEFAULT_FUN_LIB } from '../processes/funcLib'
 import type { EditorProps, FunInfo, Namespace, VarInfo } from '../processes/interface'
 import { getParentWithClass, groupBy } from '../utils/basic'
-import { DEFAULT_FUN_LIB } from '../processes/funcLib'
-import * as iconSvg from '../assets/icon'
-import DebugComp from './Debug.vue'
-import CmWrapComp from './CmWrap.vue'
 import type { FormulaResult } from './CmWrap.vue'
+import CmWrapComp from './CmWrap.vue'
+import DebugComp from './Debug.vue'
 
 const props = withDefaults(defineProps<EditorProps>(), {
   addDefaultFunLib: true,
@@ -57,8 +57,6 @@ if (props.addDefaultFunLib) {
 const CmWrapCompRef = ref()
 const DebugCompRef = ref()
 const materialNote = ref<string>('')
-const materialVars = reactive<Material[]>(findMaterials(true, ''))
-const materialFuns = reactive<Material[]>(findMaterials(false, ''))
 const searchMaterialVarKey = ref<string>('')
 const searchMaterialFunKey = ref<string>('')
 const formulaResult = reactive<FormulaResult>({
@@ -67,6 +65,14 @@ const formulaResult = reactive<FormulaResult>({
   value: '',
 })
 const openDebugPanel = ref<boolean>(false)
+
+const materialVars = computed(() => {
+  return findMaterials(true, '')
+})
+
+const materialFuns = computed(() => {
+  return findMaterials(false, '')
+})
 
 function findMaterials(isVar: boolean, filterName: string): Material[] {
   if (isVar) {
@@ -166,17 +172,17 @@ function findMaterials(isVar: boolean, filterName: string): Material[] {
 
 function searchMaterials(isVar: boolean, filterName: string) {
   if (isVar)
-    materialVars.splice(0, materialVars.length)
+    materialVars.value.splice(0, materialVars.value.length)
 
   else
-    materialFuns.splice(0, materialFuns.length)
+    materialFuns.value.splice(0, materialFuns.value.length)
 
   findMaterials(isVar, filterName).forEach((material) => {
     if (isVar)
-      materialVars.push(material)
+      materialVars.value.push(material)
 
     else
-      materialFuns.push(material)
+      materialFuns.value.push(material)
   })
 }
 
