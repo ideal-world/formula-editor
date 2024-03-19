@@ -33,8 +33,8 @@ dependencies:
     specifier: ^1.2.1
     version: 1.2.1
   codemirror:
-    specifier: ^6.65.7
-    version: 6.65.7
+    specifier: '=6.0.1'
+    version: 6.0.1(@lezer/common@1.2.1)
   eslint-linter-browserify:
     specifier: ^8.57.0
     version: 8.57.0
@@ -46,7 +46,7 @@ dependencies:
     version: 3.4.21(typescript@5.4.2)
   vue-codemirror6:
     specifier: ^1.2.5
-    version: 1.2.5(vue@3.4.21)
+    version: 1.2.5(@lezer/common@1.2.1)(vue@3.4.21)
   vue-i18n:
     specifier: ^9.10.2
     version: 9.10.2(vue@3.4.21)
@@ -1995,9 +1995,18 @@ packages:
       wrap-ansi: 7.0.0
     dev: true
 
-  /codemirror@6.65.7:
-    resolution: {integrity: sha512-HcfnUFJwI2FvH73YWVbbMh7ObWxZiHIycEhv9ZEXy6e8ZKDjtZKbbYFUtsLN46HFXPvU5V2Uvc2d55Z//oFW5A==}
-    deprecated: This is an accidentally mis-tagged instance of 5.65.7
+  /codemirror@6.0.1(@lezer/common@1.2.1):
+    resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
+    dependencies:
+      '@codemirror/autocomplete': 6.15.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.1)(@codemirror/view@6.26.0)(@lezer/common@1.2.1)
+      '@codemirror/commands': 6.3.3
+      '@codemirror/language': 6.10.1
+      '@codemirror/lint': 6.5.0
+      '@codemirror/search': 6.5.6
+      '@codemirror/state': 6.4.1
+      '@codemirror/view': 6.26.0
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /color-convert@1.9.3:
@@ -4536,16 +4545,17 @@ packages:
     resolution: {integrity: sha512-AFbieoL7a5LMqcnOF04ji+rpXadgOXnZsxQr//r83kLPr7biP7am3g9zbaZIaBGwBRWeSvoMD4mgPdX3e4NWBg==}
     dev: true
 
-  /vue-codemirror6@1.2.5(vue@3.4.21):
+  /vue-codemirror6@1.2.5(@lezer/common@1.2.1)(vue@3.4.21):
     resolution: {integrity: sha512-QVOoYzqS368NPpT0xJr5N66kHyiNOH+n4C5ksYtYOLlxJp1OXi0JDUGXMNbKOrth5osXPrYRDzwEmss5KP/lnw==}
     engines: {yarn: '>=1.22.19'}
     peerDependencies:
       vue: ^2.7.14 || ^3.4
     dependencies:
-      codemirror: 6.65.7
+      codemirror: 6.0.1(@lezer/common@1.2.1)
       vue: 3.4.21(typescript@5.4.2)
       vue-demi: 0.14.7(vue@3.4.21)
     transitivePeerDependencies:
+      - '@lezer/common'
       - '@vue/composition-api'
     dev: false
 

@@ -8,5 +8,6 @@
   "disableSources": false,
   "sidebar": {
     "autoConfiguration": false
-  }
+  },
+  "out":"./docs/api"
 }

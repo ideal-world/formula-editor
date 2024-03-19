@@ -1,7 +1,7 @@
 {
   "name": "@idealworld/formula-editor",
   "type": "module",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A relatively complete formula editor",
   "author": {
     "name": "gudaoxuri",
@@ -55,7 +55,7 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.26.0",
     "@lezer/common": "^1.2.1",
-    "codemirror": "^6.65.7",
+    "codemirror": "=6.0.1",
     "eslint-linter-browserify": "^8.57.0",
     "octicons-css": "^19.8.0",
     "vue-codemirror6": "^1.2.5",
